@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Module for handling the import of various logfiles into numpy arrays.
 Copyright 2015. Platypus LLC. All rights reserved.
