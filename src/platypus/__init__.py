@@ -1,0 +1,3 @@
+"""
+Platypus data analytics library.
+"""
