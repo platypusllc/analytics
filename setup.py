@@ -11,11 +11,11 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 # Configure python distribution package.
 setup(
-    name='platypus-analysis',
+    name='platypus-analytics',
     version='0.1.0.dev',
-    description='Analysis tools for Platypus data',
+    description='Analytics tools for Platypus data',
     long_description=long_description,
-    url='https://github.com/platypusllc/Analysis',
+    url='https://github.com/platypusllc/Analytics',
     author='Pras Velagapudi',
     author_email='pras@senseplatypus.com',
     license='Platypus LLC CONFIDENTIAL',
@@ -35,7 +35,6 @@ setup(
         ]
     },
     install_requires=[
-        'numpy',
-        'scipy'
+        'pandas'
     ],
 )
