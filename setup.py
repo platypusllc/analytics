@@ -36,6 +36,7 @@ setup(
     },
     install_requires=[
         'pandas',
-        'pyserial'
+        'pyserial',
+        'utm'
     ],
 )

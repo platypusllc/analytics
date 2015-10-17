@@ -5,8 +5,9 @@ Copyright 2015. Platypus LLC. All rights reserved.
 """
 import datetime
 import logging
-import numpy as np
+import pandas
 import re
+from ..util.conversions import add_ll_to_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,6 @@ REGEX_ES2_V4_0_0 = re.compile(
 """
 Defines a regular expression that represents a pose record of the form:
 'ES2: [e, <ec>, <temp>]'
-ES2: [e, 287.000000, 28.000000]
 This format is used in v4.0.0 vehicle log entries.
 """
 
@@ -61,8 +61,11 @@ def read_v4_0_0(logfile, start):
     :param start: the time at which the log file was started
     :type  start: datetime.datetime
     :returns: a dict containing the data from this logfile
-    :rtype: {str: numpy.recarray}
+    :rtype: {str: pandas.DataFrame}
     """
+    data_pose = []
+    data_es2 = []
+
     for line in logfile:
         # First, parse out the timestamp:
         m = REGEX_LOGRECORD_V4_0_0.match(line)
@@ -79,13 +82,33 @@ def read_v4_0_0(logfile, start):
         # Check if this is a POSE message.
         m_pose = REGEX_POSE_V4_0_0.match(message)
         if m_pose:
-            print "POSE", message
+            data_pose.append([timestamp,
+                              float(m_pose.group('easting')),
+                              float(m_pose.group('northing')),
+                              float(m_pose.group('altitude')),
+                              int(m_pose.group('zone')),
+                              m_pose.group('hemi') == "North"])
             continue
 
         # Check if this is an ES2 message.
         m_es2 = REGEX_ES2_V4_0_0.match(message)
         if m_es2:
-            print "ES2", message
+            data_es2.append([timestamp,
+                             float(m_es2.group('ec')),
+                             float(m_es2.group('temp'))])
+            continue
+
+    # Convert the list data to pandas DataFrames and return them.
+    return {
+        'pose': add_ll_to_dataframe(
+                    pandas.DataFrame(data_pose,
+                                     columns=('time', 'easting', 'northing',
+                                              'altitude', 'zone', 'hemi'))
+                          .set_index('time')),
+        'es2': pandas.DataFrame(data_es2,
+                                columns=('time', 'ec', 'temperature'))
+                     .set_index('time')
+    }
 
 
 def load_v4_0_0(filename, *args, **kwargs):
