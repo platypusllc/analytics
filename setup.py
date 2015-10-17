@@ -11,9 +11,9 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 # Configure python distribution package.
 setup(
-    name='platypus-analytics',
+    name='platypus-tools',
     version='0.1.0.dev',
-    description='Analytics tools for Platypus data',
+    description='Tools for Platypus LLC',
     long_description=long_description,
     url='https://github.com/platypusllc/Analytics',
     author='Pras Velagapudi',
@@ -35,6 +35,7 @@ setup(
         ]
     },
     install_requires=[
-        'pandas'
+        'pandas',
+        'pyserial'
     ],
 )
