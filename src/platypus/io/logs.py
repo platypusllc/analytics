@@ -7,12 +7,15 @@ import datetime
 import logging
 import pandas
 import re
-from ..util.conversions import add_ll_to_dataframe
+from ..util.conversions import (
+    add_ll_to_pose_dataframe,
+    remove_outliers_from_pose_dataframe,
+)
 
 logger = logging.getLogger(__name__)
 
 REGEX_FILENAME_V4_0_0 = re.compile(
-    r"^airboat"
+    r".*airboat"
     r"_(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})"
     r"_(?P<hour>\d{2})(?P<minute>\d{2})(?P<second>\d{2})"
     r".txt$")
@@ -24,7 +27,7 @@ format is used in v4.0.0 vehicle logs.
 
 REGEX_LOGRECORD_V4_0_0 = re.compile(
     r"^(?P<timestamp>\d+) "
-    r"(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2}),(?P<millis>\d{3}) "
+    r"(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2}),(?P<millis>\d+) "
     r"(?P<message>.+\S)\s*$")
 """
 Defines a regular expression that represents a log record of the form:
@@ -100,11 +103,15 @@ def read_v4_0_0(logfile, start):
 
     # Convert the list data to pandas DataFrames and return them.
     return {
-        'pose': add_ll_to_dataframe(
-                    pandas.DataFrame(data_pose,
-                                     columns=('time', 'easting', 'northing',
-                                              'altitude', 'zone', 'hemi'))
-                          .set_index('time')),
+        'pose': add_ll_to_pose_dataframe(
+                    remove_outliers_from_pose_dataframe(
+                        pandas.DataFrame(data_pose,
+                                         columns=('time',
+                                                  'easting', 'northing',
+                                                  'altitude', 'zone', 'hemi'))
+                              .set_index('time')
+                    )
+                ),
         'es2': pandas.DataFrame(data_es2,
                                 columns=('time', 'ec', 'temperature'))
                      .set_index('time')
