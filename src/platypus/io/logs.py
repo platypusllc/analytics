@@ -55,7 +55,7 @@ This format is used in v4.0.0 vehicle log entries.
 """
 
 
-def read_v4_0_0(logfile, start):
+def read_v4_0_0(logfile, filename):
     """
     Reads text logs from a Platypus vehicle server logfile.
 
@@ -68,6 +68,18 @@ def read_v4_0_0(logfile, start):
     """
     data_pose = []
     data_es2 = []
+
+    # In v4.0.0 files, extract start time from the filename.
+    m = REGEX_FILENAME_V4_0_0.match(filename)
+    if not m:
+        raise ValueError(
+            "v4.0.0 log files must be named 'airboat_<date>_<time>.txt'.")
+    start = datetime.datetime(int(m.group('year')),
+                              int(m.group('month')),
+                              int(m.group('day')),
+                              int(m.group('hour')),
+                              int(m.group('minute')),
+                              int(m.group('second')))
 
     for line in logfile:
         # First, parse out the timestamp:
@@ -127,21 +139,8 @@ def load_v4_0_0(filename, *args, **kwargs):
     :returns: a dict containing the data from this logfile
     :rtype: {str: numpy.recarray}
     """
-    # In v4.0.0 files, extract start time from the filename.
-    m = REGEX_FILENAME_V4_0_0.match(filename)
-    if not m:
-        raise ValueError(
-            "v4.0.0 log files must be named 'airboat_<date>_<time>.txt'.")
-    start = datetime.datetime(int(m.group('year')),
-                              int(m.group('month')),
-                              int(m.group('day')),
-                              int(m.group('hour')),
-                              int(m.group('minute')),
-                              int(m.group('second')))
-
-    # At the moment, just load this one file.
     with open(filename, 'r') as logfile:
-        return read_v4_0_0(logfile, start)
+        return read_v4_0_0(logfile, filename)
 
 
 def read(logfile, *args, **kwargs):
