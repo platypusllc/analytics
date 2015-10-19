@@ -36,6 +36,7 @@ setup(
     },
     install_requires=[
         'pandas',
+        'pymongo',
         'pyserial',
         'utm'
     ],
