@@ -1,6 +1,6 @@
 # Platypus Analytics #
 
-[![Build Status](https://travis-ci.org/platypusllc/analytics.svg?branch=feature%2Ftravis)](https://travis-ci.org/platypusllc/analytics)
+[![Build Status](https://travis-ci.org/platypusllc/analytics.svg)](https://travis-ci.org/platypusllc/analytics)
 
 Python library for Platypus data analysis.
 
