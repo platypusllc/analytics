@@ -11,18 +11,18 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 # Configure python distribution package.
 setup(
-    name='platypus-tools',
+    name='platypus-analytics',
     version='0.1.0.dev',
-    description='Tools for Platypus LLC',
+    description='Analytics for Platypus LLC',
     long_description=long_description,
-    url='https://github.com/platypusllc/Analytics',
+    url='https://github.com/platypusllc/analytics',
     author='Pras Velagapudi',
     author_email='pras@senseplatypus.com',
-    license='Platypus LLC CONFIDENTIAL',
+    license='BSD',
     keywords='data analysis',
     classifiers=[
         'Development Status :: 1 - Planning',
-        'License :: Other/Proprietary License',
+        'License :: OSI Approved :: BSD License',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering',
     ],
@@ -40,4 +40,5 @@ setup(
         'pyserial',
         'utm'
     ],
+    test_suite="tests",
 )
