@@ -9,6 +9,7 @@ import logging
 import mongoengine
 import pandas
 import pymongo
+import scipy
 from . import logs
 from bson.objectid import ObjectId
 from pymongo.cursor import CursorType
@@ -70,12 +71,35 @@ def process(db, dataset_id):
                 data[k] = v
 
     # Compute the bounding region for this dataset.
-    # TODO: finish this.
-    dataset.region = None
+    hull = scipy.spatial.ConvexHull(data['pose'][['longitude', 'latitude']])
+    path = data['pose'][['longitude', 'latitude']]
+
+    dataset_bounds = {
+        'geo': {
+            'type': 'Polygon',
+            'coordinates': hull.tolist()
+        }
+    }
+
+    dataset_path = {
+        'geo': {
+            'type': 'Polygon',
+            'coordinates': path.tolist()
+        }
+    }
 
     # Mark processing as complete and save results.
-    dataset.processed = 1.0
-    dataset.save()
+    # TODO: check result
+    datasets.update_one(
+        {"name": "Juni"},
+        {
+            '$set': {
+                'processed': 1.0,
+                'bounds': dataset_bounds,
+                'bounds': dataset_path,
+            }
+        }
+    )
 
 
 def server(host='mongodb://localhost:27017',
