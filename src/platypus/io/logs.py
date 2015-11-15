@@ -14,6 +14,11 @@ from ..util.conversions import (
 
 logger = logging.getLogger(__name__)
 
+REGEX_FLOAT = r"[-+]?[0-9]*\.?[0-9]+"
+"""
+Defines the regex string for a floating point decimal number.
+"""
+
 REGEX_FILENAME_V4_0_0 = re.compile(
     r".*airboat"
     r"_(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})"
@@ -36,10 +41,11 @@ format is used in v4.0.0 vehicle log entries.
 """
 
 REGEX_POSE_V4_0_0 = re.compile(
-    r"^POSE: \{"
-    r"(?P<easting>[\d\.]+), (?P<northing>[\d\.]+), (?P<altitude>[\d\.]+), "
-    r"Q\[(?P<roll>[\d\.]+),(?P<pitch>[\d\.]+),(?P<yaw>[\d\.]+)\]"
-    r"\} @ (?P<zone>\d+)(?P<hemi>North|South)$")
+    r"^POSE: \{{"
+    r"(?P<easting>{number}), (?P<northing>{number}), (?P<altitude>{number}), "
+    r"Q\[(?P<roll>{number}),(?P<pitch>{number}),(?P<yaw>{number})\]"
+    r"\}} @ (?P<zone>\d+)(?P<hemi>North|South)$"
+    .format(number=REGEX_FLOAT))
 """
 Defines a regular expression that represents a pose record of the form:
 'POSE: {<east>, <north>, <altitude>, Q[<roll>,<pitch>,<yaw>]} @ <zone><hemi>'
