@@ -1,5 +1,7 @@
 # Platypus Analytics #
 
+[![Build Status](https://travis-ci.org/platypusllc/analytics.svg?branch=feature%2Ftravis)](https://travis-ci.org/platypusllc/analytics)
+
 Python library for Platypus data analysis.
 
  >:warning: This library is currently under development!  Some of the functionality in the library may be incomplete or untested.
