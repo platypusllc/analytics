@@ -16,7 +16,7 @@ If you would like to develop, you can install the library with the `--editable` 
 ```bash
 $ virtualenv ./venv
 $ . ./venv/bin/activate
-$ pip install -e pip install -e git+https://github.com/platypusllc/analytics.git#egg=platypus-analytics
+$ pip install -e git+https://github.com/platypusllc/analytics.git#egg=platypus-analytics
 $ cd ./venv/src/platypus-analytics
 ```
 
