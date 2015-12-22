@@ -14,7 +14,17 @@ $ sudo pip install git+https://github.com/platypusllc/analytics.git
 
 If you would like to develop, you can install the library with the `--editable` option.  If you do this, it is highly recommended that you use a [virtualenv][1]:
 ```bash
-$ pip install -e git+https://github.com/platypusllc/analytics.git
+$ virtualenv ./venv
+$ . ./venv/bin/activate
+$ pip install -e pip install -e git+https://github.com/platypusllc/analytics.git#egg=platypus-analytics
+$ cd ./venv/src/platypus-analytics
+```
+
+Now, in a terminal, you can access your `virtualenv` and the `analytics` library by calling:
+```bash
+$ . ./venv/bin/activate
+$ python
+>>> import platypus
 ```
 
 [1]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
