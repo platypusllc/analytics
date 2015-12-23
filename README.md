@@ -6,13 +6,22 @@ Python library for Platypus data analysis.
 
  >:warning: This library is currently under development!  Some of the functionality in the library may be incomplete or untested.
 
-## Installation ##
+## Quickstart ##
+
 The easiest way to install is via `pip`:
 ```bash
-$ sudo pip install git+https://github.com/platypusllc/analytics.git
+$ pip install git+https://github.com/platypusllc/analytics.git
 ```
 
-If you would like to develop, you can install the library with the `--editable` option.  If you do this, it is highly recommended that you use a [virtualenv][1]:
+If you would like to develop the library, you can install the library with the `--editable/-e` option.  If you do this, you may want to consider using a python virtual environment.  Two popular options are [virtualenv][1] and [anaconda][2]:
+
+**Standalone**
+```
+$ git clone https://github.com/platypusllc/analytics.git
+$ pip install -e analytics
+```
+
+**Virtualenv**
 ```bash
 $ virtualenv ./venv
 $ . ./venv/bin/activate
@@ -20,11 +29,16 @@ $ pip install -e git+https://github.com/platypusllc/analytics.git#egg=platypus-a
 $ cd ./venv/src/platypus-analytics
 ```
 
-Now, in a terminal, you can access your `virtualenv` and the `analytics` library by calling:
+**Anaconda**
 ```bash
-$ . ./venv/bin/activate
-$ python
->>> import platypus
+$ conda create -n platypus
+$ source activate platypus
+$ pip install -e git+https://github.com/platypusllc/analytics.git#egg=platypus-analytics
 ```
 
+## Examples ##
+
+Basic usage examples of this library can be found in the [examples](examples) directory.
+
 [1]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
+[2]: https://www.continuum.io/documentation
