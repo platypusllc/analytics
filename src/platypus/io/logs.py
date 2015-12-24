@@ -14,12 +14,12 @@ from ..util.conversions import (
 
 logger = logging.getLogger(__name__)
 
-REGEX_FLOAT = r"[-+]?[0-9]*\.?[0-9]+"
+_REGEX_FLOAT = r"[-+]?[0-9]*\.?[0-9]+"
 """
 Defines the regex string for a floating point decimal number.
 """
 
-REGEX_FILENAME_V4_0_0 = re.compile(
+_REGEX_FILENAME_V4_0_0 = re.compile(
     r".*airboat"
     r"_(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})"
     r"_(?P<hour>\d{2})(?P<minute>\d{2})(?P<second>\d{2})"
@@ -30,7 +30,7 @@ Defines a regular expression that represents a filename of the form:
 format is used in v4.0.0 vehicle logs.
 """
 
-REGEX_LOGRECORD_V4_0_0 = re.compile(
+_REGEX_LOGRECORD_V4_0_0 = re.compile(
     r"^(?P<timestamp>\d+) "
     r"(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2}),(?P<millis>\d+) "
     r"(?P<message>.+\S)\s*$")
@@ -40,19 +40,19 @@ Defines a regular expression that represents a log record of the form:
 format is used in v4.0.0 vehicle log entries.
 """
 
-REGEX_POSE_V4_0_0 = re.compile(
+_REGEX_POSE_V4_0_0 = re.compile(
     r"^POSE: \{{"
     r"(?P<easting>{number}), (?P<northing>{number}), (?P<altitude>{number}), "
     r"Q\[(?P<roll>{number}),(?P<pitch>{number}),(?P<yaw>{number})\]"
     r"\}} @ (?P<zone>\d+)(?P<hemi>North|South)$"
-    .format(number=REGEX_FLOAT))
+    .format(number=_REGEX_FLOAT))
 """
 Defines a regular expression that represents a pose record of the form:
 'POSE: {<east>, <north>, <altitude>, Q[<roll>,<pitch>,<yaw>]} @ <zone><hemi>'
 This format is used in v4.0.0 vehicle log entries.
 """
 
-REGEX_ES2_V4_0_0 = re.compile(
+_REGEX_ES2_V4_0_0 = re.compile(
     r"^ES2: \[e, (?P<ec>[\d\.]+), (?P<temp>[\d\.]+)\]")
 """
 Defines a regular expression that represents a pose record of the form:
@@ -76,7 +76,7 @@ def read_v4_0_0(logfile, filename):
     data_es2 = []
 
     # In v4.0.0 files, extract start time from the filename.
-    m = REGEX_FILENAME_V4_0_0.match(filename)
+    m = _REGEX_FILENAME_V4_0_0.match(filename)
     if not m:
         raise ValueError(
             "v4.0.0 log files must be named 'airboat_<date>_<time>.txt'.")
@@ -89,7 +89,7 @@ def read_v4_0_0(logfile, filename):
 
     for line in logfile:
         # First, parse out the timestamp:
-        m = REGEX_LOGRECORD_V4_0_0.match(line)
+        m = _REGEX_LOGRECORD_V4_0_0.match(line)
         if not m:
             logger.warning("Failed to parse log record: {:s}"
                            .format(line))
@@ -101,7 +101,7 @@ def read_v4_0_0(logfile, filename):
         message = m.group('message')
 
         # Check if this is a POSE message.
-        m_pose = REGEX_POSE_V4_0_0.match(message)
+        m_pose = _REGEX_POSE_V4_0_0.match(message)
         if m_pose:
             data_pose.append([timestamp,
                               float(m_pose.group('easting')),
@@ -112,7 +112,7 @@ def read_v4_0_0(logfile, filename):
             continue
 
         # Check if this is an ES2 message.
-        m_es2 = REGEX_ES2_V4_0_0.match(message)
+        m_es2 = _REGEX_ES2_V4_0_0.match(message)
         if m_es2:
             data_es2.append([timestamp,
                              float(m_es2.group('ec')),
