@@ -38,6 +38,7 @@ setup(
         'pandas',
         'pymongo',
         'pyserial',
+        'six',
         'utm'
     ],
     test_suite="tests",
