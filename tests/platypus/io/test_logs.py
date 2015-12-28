@@ -69,10 +69,10 @@ class LogsTest(TestCase):
         # Test that the correct pose entries were loaded.
         self.assertEqual(log_v4_2_0['pose'].shape, (15, 7))
         self.assertAlmostEqual(log_v4_2_0['pose']['longitude'][0],
-                               -81.283304250310977)
+                               -81.2833044)
         self.assertAlmostEqual(log_v4_2_0['pose']['latitude'][0],
-                               42.192733443703723)
+                               42.1927325)
         self.assertAlmostEqual(log_v4_2_0['pose']['longitude'][-1],
-                               -81.2833041314601)
+                               -81.2833041)
         self.assertAlmostEqual(log_v4_2_0['pose']['latitude'][-1],
-                               42.192734344628192)
+                               42.1927343)
