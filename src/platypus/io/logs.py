@@ -61,6 +61,16 @@ This format is used in v4.0.0 vehicle log entries.
 """
 
 
+_REGEX_SENSOR_V4_2_0 = re.compile(
+    r"^SENSOR(?P<index>\d+): "
+    r"\{\"data\":\"(?P<data>.+)\",\"type\":\"(?P<type>\S+)\"\}")
+"""
+Defines a regular expression that represents generic sensor record of the form:
+'SENSOR1: {"data":"7.78","type":"atlas_do"}'
+This format is used in v4.2.0 vehicle log entries.
+"""
+
+
 def read_v4_0_0(logfile, filename):
     """
     Reads text logs from a Platypus vehicle server logfile.
@@ -73,7 +83,7 @@ def read_v4_0_0(logfile, filename):
     :rtype: {str: pandas.DataFrame}
     """
     data_pose = []
-    data_es2 = []
+    data_sensors = {}
 
     # In v4.0.0 files, extract start time from the filename.
     m = _REGEX_FILENAME_V4_0_0.match(filename)
@@ -114,26 +124,61 @@ def read_v4_0_0(logfile, filename):
         # Check if this is an ES2 message.
         m_es2 = _REGEX_ES2_V4_0_0.match(message)
         if m_es2:
-            data_es2.append([timestamp,
-                             float(m_es2.group('ec')),
-                             float(m_es2.group('temp'))])
+            if 'es2' not in data_sensors:
+                data_sensors['es2'] = []
+            data_sensors['es2'].append([timestamp,
+                                        float(m_es2.group('ec')),
+                                        float(m_es2.group('temp'))])
+            continue
+
+        m_sensor = _REGEX_SENSOR_V4_2_0.match(message)
+        if m_sensor:
+            # Extract the sensor type and the data.
+            type_sensor = m_sensor.group('type')
+            data_sensor = [float(datum)
+                           for datum in m_sensor.group('data').split(" ")]
+
+            # Add the sensor if it does not already exist in the data map.
+            if type_sensor not in data_sensors:
+                data_sensors[type_sensor] = []
+
+            # Insert the new sensor reading into the appropriate list.
+            data_sensor.insert(0, timestamp)
+            data_sensors[m_sensor.group('type')].append(data_sensor)
             continue
 
     # Convert the list data to pandas DataFrames and return them.
-    return {
-        'pose': add_ll_to_pose_dataframe(
-                    remove_outliers_from_pose_dataframe(
-                        pandas.DataFrame(data_pose,
-                                         columns=('time',
-                                                  'easting', 'northing',
-                                                  'altitude', 'zone', 'hemi'))
-                              .set_index('time')
-                    )
-                ),
-        'es2': pandas.DataFrame(data_es2,
-                                columns=('time', 'ec', 'temperature'))
-                     .set_index('time')
+    # For known types, clean up and label the data.
+    data = {}
+
+    data['pose'] = add_ll_to_pose_dataframe(
+        remove_outliers_from_pose_dataframe(
+            pandas.DataFrame(data_pose,
+                             columns=('time',
+                                      'easting', 'northing',
+                                      'altitude', 'zone', 'hemi'))
+                  .set_index('time')
+        )
+    )
+
+    if 'es2' in data_sensors:
+        data['es2'] = pandas.DataFrame(
+            data_sensors['es2'], columns=('time', 'ec', 'temperature')
+        ).set_index('time')
+
+    # For sensor types that we don't know how to handle,
+    # provide an unlabeled data frame.
+    unlabeled_sensor_data = {
+        sensor_type: pandas.DataFrame(sensor_value)
+                           .rename(columns={0: 'time'}, copy=False)
+                           .set_index('time')
+        for sensor_type, sensor_value in data_sensors.iteritems()
+        if sensor_type not in data
     }
+    data.update(unlabeled_sensor_data)
+
+    # Return merged data structure.
+    return data
 
 
 def load_v4_0_0(filename, *args, **kwargs):
