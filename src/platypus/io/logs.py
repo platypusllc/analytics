@@ -7,6 +7,7 @@ import datetime
 import logging
 import pandas
 import re
+import six
 from ..util.conversions import (
     add_ll_to_pose_dataframe,
     remove_outliers_from_pose_dataframe,
@@ -172,7 +173,7 @@ def read_v4_0_0(logfile, filename):
         sensor_type: pandas.DataFrame(sensor_value)
                            .rename(columns={0: 'time'}, copy=False)
                            .set_index('time')
-        for sensor_type, sensor_value in data_sensors.iteritems()
+        for sensor_type, sensor_value in six.viewitems(data_sensors)
         if sensor_type not in data
     }
     data.update(unlabeled_sensor_data)
