@@ -3,8 +3,10 @@
 Module for handling the import of various logfiles into numpy arrays.
 Copyright 2015. Platypus LLC. All rights reserved.
 """
+import collections
 import datetime
 import logging
+import json
 import pandas
 import re
 import six
@@ -62,7 +64,7 @@ This format is used in v4.0.0 vehicle log entries.
 """
 
 
-_REGEX_SENSOR_V4_2_0 = re.compile(
+_REGEX_SENSOR_V4_0_0 = re.compile(
     r"^SENSOR(?P<index>\d+): "
     r"\{\"data\":\"(?P<data>.+)\",\"type\":\"(?P<type>\S+)\"\}")
 """
@@ -71,6 +73,87 @@ Defines a regular expression that represents generic sensor record of the form:
 This format is used in v4.2.0 vehicle log entries.
 """
 
+DATA_FIELDS_v4_1_0 = {
+    'BATTERY': ('voltage', 'm0_current', 'm1_current'),
+    'ES2': ('ec', 'temp'),
+    'ATLAS_DO': ('do',),
+    'ATLAS_PH': ('ph',),
+}
+"""
+Defines dataframe field names for known data types in v4.1.0 logfiles.
+"""
+
+
+def read_v4_1_0(logfile):
+    """
+    Reads text logs from a Platypus vehicle server logfile.
+
+    :param logfile: the logfile as an iterable
+    :type  logfile: python file-like
+    :returns: a dict containing the data from this logfile
+    :rtype: {str: pandas.DataFrame}
+    """
+    raw_data = collections.defaultdict(list)
+
+    for line in logfile:
+        # Extract each line fron the logfile and convert the timestamp.
+        time_offset_ms, date, message = line.split(' ', 2)
+        time_offset = datetime.timedelta(milliseconds=int(time_offset_ms))
+
+        # Try to parse the log as a JSON object.
+        try:
+            entry = json.loads(message)
+        except ValueError as e:
+            raise ValueError(
+                "Aborted after invalid JSON log message '{:s}': {:s}"
+                .format(message, e))
+
+        # Extract appropriate data from each entry.
+        for k, v in six.viewitems(entry):
+            if k == 'pose':
+                zone = int(v['zone'][:-5])
+                hemi = v['zone'].endswith('North')
+                raw_data[k].append([
+                    time_offset,
+                    v['p'][0],
+                    v['p'][1],
+                    v['p'][2],
+                    zone, hemi
+                ])
+            elif k == 'sensor':
+                raw_data[v['type']].append(
+                    [time_offset] + v['data']
+                )
+            else:
+                pass
+
+    # Convert the list data to pandas DataFrames and return them.
+    # For known types, clean up and label the data.
+    data = {}
+
+    for k, v in six.viewitems(raw_data):
+        if k == 'pose':
+            data['pose'] = add_ll_to_pose_dataframe(
+                remove_outliers_from_pose_dataframe(
+                    pandas.DataFrame(v, columns=('time',
+                                                 'easting', 'northing',
+                                                 'altitude', 'zone', 'hemi'))
+                          .set_index('time')
+                )
+            )
+        elif k in DATA_FIELDS_v4_1_0:
+            data[k] = (pandas.DataFrame(
+                v, columns=('time',) + DATA_FIELDS_v4_1_0[k])
+                .set_index('time'))
+        else:
+            # For sensor types that we don't know how to handle,
+            # provide an unlabeled data frame.
+            data[k] = (pandas.DataFrame(v)
+                       .rename(columns={0: 'time'}, copy=False)
+                       .set_index('time'))
+
+    return data
+
 
 def read_v4_0_0(logfile, filename):
     """
@@ -78,8 +161,8 @@ def read_v4_0_0(logfile, filename):
 
     :param logfile: the logfile as an iterable
     :type  logfile: python file-like
-    :param start: the time at which the log file was started
-    :type  start: datetime.datetime
+    :param filename: the name of the logfile containing the start time.
+    :type  filename: str
     :returns: a dict containing the data from this logfile
     :rtype: {str: pandas.DataFrame}
     """
@@ -132,7 +215,7 @@ def read_v4_0_0(logfile, filename):
                                         float(m_es2.group('temp'))])
             continue
 
-        m_sensor = _REGEX_SENSOR_V4_2_0.match(message)
+        m_sensor = _REGEX_SENSOR_V4_0_0.match(message)
         if m_sensor:
             # Extract the sensor type and the data.
             type_sensor = m_sensor.group('type')
@@ -182,9 +265,22 @@ def read_v4_0_0(logfile, filename):
     return data
 
 
-def load_v4_0_0(filename, *args, **kwargs):
+def load_v4_1_0(filename, *args, **kwargs):
     """
     Loads a log from a v4.1.0 server from a filename.
+
+    :param filename: path to a log file
+    :type  filename: string
+    :returns: a dict containing the data from this logfile
+    :rtype: {str: numpy.recarray}
+    """
+    with open(filename, 'r') as logfile:
+        return read_v4_1_0(logfile)
+
+
+def load_v4_0_0(filename, *args, **kwargs):
+    """
+    Loads a log from a v4.0.0 server from a filename.
 
     :param filename: path to a log file
     :type  filename: string

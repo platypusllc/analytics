@@ -5,8 +5,11 @@ from unittest import TestCase
 TEST_LOG_V4_0_0_FILENAME = os.path.join(
     os.path.dirname(__file__), 'airboat_20130807_063622.txt')
 
-TEST_LOG_V4_2_0_FILENAME = os.path.join(
+TEST_LOG_V4_0_0_SENSOR_FILENAME = os.path.join(
     os.path.dirname(__file__), 'airboat_20151220_043848.txt')
+
+TEST_LOG_V4_1_0_FILENAME = os.path.join(
+    os.path.dirname(__file__), 'platypus_20160426_024734.txt')
 
 
 class LogsTest(TestCase):
@@ -44,35 +47,64 @@ class LogsTest(TestCase):
         self.assertAlmostEqual(log_v4_0_0['pose']['latitude'][-1],
                                40.490316940191633)
 
-    def test_read_v4_2_0(self):
-        """ Test reading a v4.2.0 logfile. """
+    def test_read_v4_0_0_sensor(self):
+        """ Test reading a v4.0.0 logfile with sensors. """
         import numpy
 
-        with open(TEST_LOG_V4_2_0_FILENAME) as log_file:
-            log_v4_2_0_str = log_file.readlines()
-        log_v4_2_0 = platypus.io.logs.read(
-            log_v4_2_0_str, filename=TEST_LOG_V4_2_0_FILENAME)
+        with open(TEST_LOG_V4_0_0_SENSOR_FILENAME) as log_file:
+            log_v4_0_0_str = log_file.readlines()
+        log_v4_0_0 = platypus.io.logs.read(
+            log_v4_0_0_str, filename=TEST_LOG_V4_0_0_SENSOR_FILENAME)
 
         # Test that the correct battery sensor entries were loaded.
         self.assertTrue(numpy.allclose(
-            log_v4_2_0['battery'].as_matrix(),
+            log_v4_0_0['battery'].as_matrix(),
             numpy.array([[12.463, 9045.454102, 0.],
                          [12.463, 0.,          15.151515]])
         ))
 
         # Test that the correct atlas_do sensor entries were loaded.
         self.assertTrue(numpy.allclose(
-            log_v4_2_0['atlas_do'].as_matrix(),
+            log_v4_0_0['atlas_do'].as_matrix(),
             numpy.array([[7.78]])
         ))
 
         # Test that the correct pose entries were loaded.
-        self.assertEqual(log_v4_2_0['pose'].shape, (15, 7))
-        self.assertAlmostEqual(log_v4_2_0['pose']['longitude'][0],
+        self.assertEqual(log_v4_0_0['pose'].shape, (15, 7))
+        self.assertAlmostEqual(log_v4_0_0['pose']['longitude'][0],
                                -81.2833044)
-        self.assertAlmostEqual(log_v4_2_0['pose']['latitude'][0],
+        self.assertAlmostEqual(log_v4_0_0['pose']['latitude'][0],
                                42.1927325)
-        self.assertAlmostEqual(log_v4_2_0['pose']['longitude'][-1],
+        self.assertAlmostEqual(log_v4_0_0['pose']['longitude'][-1],
                                -81.2833041)
-        self.assertAlmostEqual(log_v4_2_0['pose']['latitude'][-1],
+        self.assertAlmostEqual(log_v4_0_0['pose']['latitude'][-1],
                                42.1927343)
+
+    def test_read_v4_1_0(self):
+        """ Test reading a v4.1.0 logfile. """
+        import numpy
+
+        with open(TEST_LOG_V4_1_0_FILENAME) as log_file:
+            log_str = log_file.readlines()
+        log = platypus.io.logs.read_v4_1_0(log_str)
+
+        # Test that the correct battery sensor entries were loaded.
+        self.assertEqual(log['BATTERY'].shape, (12, 3))
+        self.assertAlmostEqual(log['BATTERY'].as_matrix()[0,0], 15.263)
+        self.assertAlmostEqual(log['BATTERY'].as_matrix()[-1,0], 15.015)
+
+        # Test that the correct atlas sensor entries were loaded.
+        self.assertEqual(log['ATLAS_PH'].shape, (11, 1))
+        self.assertAlmostEqual(log['ATLAS_PH'].as_matrix()[0,0], 7.054)
+        self.assertAlmostEqual(log['ATLAS_PH'].as_matrix()[-1,0], 6.7)
+
+        self.assertEqual(log['ATLAS_DO'].shape, (21, 1))
+        self.assertAlmostEqual(log['ATLAS_DO'].as_matrix()[0,0], 10.15)
+        self.assertAlmostEqual(log['ATLAS_DO'].as_matrix()[-1,0], 10.56)
+
+        # Test that the correct pose entries were loaded.
+        self.assertEqual(log['pose'].shape, (211, 7))
+        self.assertAlmostEqual(log['pose']['easting'][0], 337185.1208144073)
+        self.assertAlmostEqual(log['pose']['northing'][0], 4467663.6643868135)
+        self.assertAlmostEqual(log['pose']['easting'][-1], 337679.211030486)
+        self.assertAlmostEqual(log['pose']['northing'][-1], 4467651.475327312)
