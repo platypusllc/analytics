@@ -7,7 +7,7 @@ import argparse
 import gridfs
 import logging
 import mongoengine
-import pandas
+import numpy as np
 import pymongo
 import scipy
 from . import logs
@@ -66,7 +66,7 @@ def process(db, dataset_id):
                              filename=log_record['original']['name'])
         for k, v in log_data.iteritems():
             if k in data:
-                data[k] = pandas.concat(data[k], v)
+                data[k] = np.vstack(data[k], v)
             else:
                 data[k] = v
 

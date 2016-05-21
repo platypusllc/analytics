@@ -35,9 +35,10 @@ setup(
         ]
     },
     install_requires=[
-        'pandas',
+        'numpy',
         'pymongo',
         'pyserial',
+        'scipy',
         'six',
         'utm'
     ],

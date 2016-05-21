@@ -4,11 +4,10 @@ Module for handling the import of various logfiles into numpy arrays.
 Copyright 2015. Platypus LLC. All rights reserved.
 """
 import collections
-import datetime
 import logging
 import itertools
 import json
-import pandas
+import numpy as np
 import re
 import six
 from ..util.conversions import (
@@ -102,18 +101,18 @@ def read_v4_2_0(logfile):
     :param logfile: the logfile as an iterable
     :type  logfile: python file-like
     :returns: a dict containing the data from this logfile
-    :rtype: {str: pandas.DataFrame}
+    :rtype: {str: numpy.rec.array}
     """
     raw_data = collections.defaultdict(list)
-    start_time = datetime.datetime.utcfromtimestamp(0)
+    start_time = np.datetime64(0, 'ms')
 
     for line in logfile:
         # Extract each line fron the logfile and convert the timestamp.
         time_offset_ms, level, message = line.split('\t', 2)
 
         # Compute the timestamp for each log entry.
-        time_offset = datetime.timedelta(milliseconds=int(time_offset_ms))
-        timestamp = start_time + time_offset
+        time_offset = np.timedelta64(int(time_offset_ms), 'ms')
+        timestamp = np.datetime64(start_time + time_offset)
 
         # Try to parse the log as a JSON object.
         try:
@@ -126,8 +125,7 @@ def read_v4_2_0(logfile):
         # If the line is a datetime, compute subsequent timestamps from this.
         # We assume that "date" and "time" are always together in the entry.
         if 'date' in entry:
-            timestamp = datetime.datetime.utcfromtimestamp(
-                entry['time'] / 1000.)
+            timestamp = np.datetime64(entry['time'], 'ms')
             start_time = timestamp - time_offset
 
         # Extract appropriate data from each entry.
@@ -149,7 +147,7 @@ def read_v4_2_0(logfile):
             else:
                 pass
 
-    # Convert the list data to pandas DataFrames and return them.
+    # Convert the list data to numpy recarrays and return them.
     # For known types, clean up and label the data.
     data = {}
 
@@ -157,22 +155,25 @@ def read_v4_2_0(logfile):
         if k == 'pose':
             data['pose'] = add_ll_to_pose_dataframe(
                 remove_outliers_from_pose_dataframe(
-                    pandas.DataFrame(v, columns=('time',
-                                                 'easting', 'northing',
-                                                 'altitude', 'zone', 'hemi'))
-                          .set_index('time')
+                    np.rec.array(v, dtype=[('time', 'datetime64[ms]'),
+                                           ('easting', float),
+                                           ('northing', float),
+                                           ('altitude', float),
+                                           ('zone', int),
+                                           ('hemi', bool)])
                 )
             )
         elif k in _DATA_FIELDS_v4_2_0:
-            data[k] = (pandas.DataFrame(
-                v, columns=('time',) + _DATA_FIELDS_v4_2_0[k])
-                .set_index('time'))
+            fields = [('time', 'datetime64[ms]')]
+            fields += [(field_name, float)
+                       for field_name in _DATA_FIELDS_v4_2_0[k]]
+            data[k] = np.rec.array(v, dtype=fields)
         else:
             # For sensor types that we don't know how to handle,
             # provide an unlabeled data frame.
-            data[k] = (pandas.DataFrame(v)
-                       .rename(columns={0: 'time'}, copy=False)
-                       .set_index('time'))
+            fields = [('time', 'datetime64[ms]')]
+            fields += [float] * len(v[0])
+            data[k] = np.rec.array(v, dtype=fields)
 
     return data
 
@@ -184,17 +185,17 @@ def read_v4_1_0(logfile):
     :param logfile: the logfile as an iterable
     :type  logfile: python file-like
     :returns: a dict containing the data from this logfile
-    :rtype: {str: pandas.DataFrame}
+    :rtype: {str: numpy.rec.array}
     """
     raw_data = collections.defaultdict(list)
-    start_time = datetime.datetime.utcfromtimestamp(0)
+    start_time = np.datetime64(0, 'ms')
 
     for line in logfile:
         # Extract each line fron the logfile and convert the timestamp.
         time_offset_ms, date, message = line.split(' ', 2)
 
         # Compute the timestamp for each log entry.
-        time_offset = datetime.timedelta(milliseconds=int(time_offset_ms))
+        time_offset = np.timedelta64(int(time_offset_ms), 'ms')
         timestamp = start_time + time_offset
 
         # Try to parse the log as a JSON object.
@@ -224,7 +225,7 @@ def read_v4_1_0(logfile):
             else:
                 pass
 
-    # Convert the list data to pandas DataFrames and return them.
+    # Convert the list data to numpy recarrays and return them.
     # For known types, clean up and label the data.
     data = {}
 
@@ -232,22 +233,25 @@ def read_v4_1_0(logfile):
         if k == 'pose':
             data['pose'] = add_ll_to_pose_dataframe(
                 remove_outliers_from_pose_dataframe(
-                    pandas.DataFrame(v, columns=('time',
-                                                 'easting', 'northing',
-                                                 'altitude', 'zone', 'hemi'))
-                          .set_index('time')
+                    np.rec.array(v, dtype=[('time', 'datetime64[ms]'),
+                                           ('easting', float),
+                                           ('northing', float),
+                                           ('altitude', float),
+                                           ('zone', int),
+                                           ('hemi', bool)])
                 )
             )
         elif k in _DATA_FIELDS_v4_1_0:
-            data[k] = (pandas.DataFrame(
-                v, columns=('time',) + _DATA_FIELDS_v4_1_0[k])
-                .set_index('time'))
+            fields = [('time', 'datetime64[ms]')]
+            fields += [(field_name, float)
+                       for field_name in _DATA_FIELDS_v4_2_0[k]]
+            data[k] = np.rec.array(v, dtype=fields)
         else:
             # For sensor types that we don't know how to handle,
             # provide an unlabeled data frame.
-            data[k] = (pandas.DataFrame(v)
-                       .rename(columns={0: 'time'}, copy=False)
-                       .set_index('time'))
+            fields = [('time', 'datetime64[ms]')]
+            fields += [float] * len(v[0])
+            data[k] = np.rec.array(v, dtype=fields)
 
     return data
 
@@ -261,7 +265,7 @@ def read_v4_0_0(logfile, filename):
     :param filename: the name of the logfile containing the start time.
     :type  filename: str
     :returns: a dict containing the data from this logfile
-    :rtype: {str: pandas.DataFrame}
+    :rtype: {str: numpy.recarray}
     """
     data_pose = []
     data_sensors = {}
@@ -271,12 +275,12 @@ def read_v4_0_0(logfile, filename):
     if not m:
         raise ValueError(
             "v4.0.0 log files must be named 'airboat_<date>_<time>.txt'.")
-    start = datetime.datetime(int(m.group('year')),
-                              int(m.group('month')),
-                              int(m.group('day')),
-                              int(m.group('hour')),
-                              int(m.group('minute')),
-                              int(m.group('second')))
+    start_time = np.datetime64(int(m.group('year')),
+                               int(m.group('month')),
+                               int(m.group('day')),
+                               int(m.group('hour')),
+                               int(m.group('minute')),
+                               int(m.group('second')))
 
     for line in logfile:
         # First, parse out the timestamp:
@@ -287,8 +291,8 @@ def read_v4_0_0(logfile, filename):
             continue
 
         # Construct log record timestamp from start time and offset.
-        offset = datetime.timedelta(milliseconds=int(m.group('timestamp')))
-        timestamp = start + offset
+        time_offset = np.timedelta64(int(m.group('timestamp')), 'ms')
+        timestamp = start_time + time_offset
         message = m.group('message')
 
         # Check if this is a POSE message.
@@ -328,31 +332,36 @@ def read_v4_0_0(logfile, filename):
             data_sensors[m_sensor.group('type')].append(data_sensor)
             continue
 
-    # Convert the list data to pandas DataFrames and return them.
+    # Convert the list data to numpy recarrays and return them.
     # For known types, clean up and label the data.
     data = {}
 
     data['pose'] = add_ll_to_pose_dataframe(
         remove_outliers_from_pose_dataframe(
-            pandas.DataFrame(data_pose,
-                             columns=('time',
-                                      'easting', 'northing',
-                                      'altitude', 'zone', 'hemi'))
-                  .set_index('time')
+            np.rec.array(data_pose, dtype=[('time', 'datetime64[ms]'),
+                                           ('easting', float),
+                                           ('northing', float),
+                                           ('altitude', float),
+                                           ('zone', int),
+                                           ('hemi', bool)])
         )
     )
 
     if 'es2' in data_sensors:
-        data['es2'] = pandas.DataFrame(
-            data_sensors['es2'], columns=('time', 'ec', 'temperature')
-        ).set_index('time')
+        data['es2'] = np.rec.array(
+            data_sensors['es2'],
+            dtype=[('time', 'datetime64[ms]'),
+                   ('ec', float),
+                   ('temperature', float)]
+        )
 
     # For sensor types that we don't know how to handle,
     # provide an unlabeled data frame.
     unlabeled_sensor_data = {
-        sensor_type: pandas.DataFrame(sensor_value)
-                           .rename(columns={0: 'time'}, copy=False)
-                           .set_index('time')
+        sensor_type: np.rec.array(
+            sensor_value,
+            dtype=[('time', 'datetime64[ms]')] + [float] * len(sensor_value[0])
+        )
         for sensor_type, sensor_value in six.viewitems(data_sensors)
         if sensor_type not in data
     }
