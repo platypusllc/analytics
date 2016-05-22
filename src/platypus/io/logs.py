@@ -283,7 +283,7 @@ def read_v4_0_0(logfile, filename):
         int(m.group('hour')),
         int(m.group('minute')),
         int(m.group('second'))
-    )
+    ))
 
     for line in logfile:
         # First, parse out the timestamp:
