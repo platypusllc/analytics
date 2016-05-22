@@ -4,6 +4,7 @@ Module for handling the import of various logfiles into numpy arrays.
 Copyright 2015. Platypus LLC. All rights reserved.
 """
 import collections
+import datetime
 import logging
 import itertools
 import json
@@ -275,12 +276,14 @@ def read_v4_0_0(logfile, filename):
     if not m:
         raise ValueError(
             "v4.0.0 log files must be named 'airboat_<date>_<time>.txt'.")
-    start_time = np.datetime64(int(m.group('year')),
-                               int(m.group('month')),
-                               int(m.group('day')),
-                               int(m.group('hour')),
-                               int(m.group('minute')),
-                               int(m.group('second')))
+    start_time = np.datetime64(datetime.datetime(
+        int(m.group('year')),
+        int(m.group('month')),
+        int(m.group('day')),
+        int(m.group('hour')),
+        int(m.group('minute')),
+        int(m.group('second'))
+    )
 
     for line in logfile:
         # First, parse out the timestamp:

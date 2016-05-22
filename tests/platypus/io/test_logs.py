@@ -30,12 +30,12 @@ class LogsTest(TestCase):
             log_v4_0_0_str, filename=TEST_LOG_V4_0_0_FILENAME)
 
         # Test that the correct number of ES2 entries were loaded.
-        self.assertEqual(log_v4_0_0['es2'].shape, (22, 2))
+        self.assertEqual(log_v4_0_0['es2'].shape, (22,))
         self.assertEqual(log_v4_0_0['es2']['temperature'][-1], 10.0)
         self.assertEqual(log_v4_0_0['es2']['ec'][-1], 9.0)
 
         # Test that the correct pose entries were loaded.
-        self.assertEqual(log_v4_0_0['pose'].shape, (95, 7))
+        self.assertEqual(log_v4_0_0['pose'].shape, (95,))
         self.assertAlmostEqual(log_v4_0_0['pose']['longitude'][-1],
                                -79.917394651365555)
         self.assertAlmostEqual(log_v4_0_0['pose']['latitude'][-1],
@@ -52,19 +52,19 @@ class LogsTest(TestCase):
 
         # Test that the correct battery sensor entries were loaded.
         self.assertTrue(numpy.allclose(
-            log_v4_0_0['battery'].as_matrix(),
+            log_v4_0_0['battery'][['voltage', 'm0_current', 'm1_current']],
             numpy.array([[12.463, 9045.454102, 0.],
                          [12.463, 0., 15.151515]])
         ))
 
         # Test that the correct atlas_do sensor entries were loaded.
         self.assertTrue(numpy.allclose(
-            log_v4_0_0['atlas_do'].as_matrix(),
+            log_v4_0_0['atlas_do']['do'],
             numpy.array([[7.78]])
         ))
 
         # Test that the correct pose entries were loaded.
-        self.assertEqual(log_v4_0_0['pose'].shape, (15, 7))
+        self.assertEqual(log_v4_0_0['pose'].shape, (15,))
         self.assertAlmostEqual(log_v4_0_0['pose']['longitude'][0],
                                -81.2833044)
         self.assertAlmostEqual(log_v4_0_0['pose']['latitude'][0],
@@ -81,18 +81,18 @@ class LogsTest(TestCase):
         log = platypus.io.logs.read_v4_1_0(log_str)
 
         # Test that the correct battery sensor entries were loaded.
-        self.assertEqual(log['BATTERY'].shape, (12, 3))
-        self.assertAlmostEqual(log['BATTERY'].as_matrix()[0, 0], 15.263)
-        self.assertAlmostEqual(log['BATTERY'].as_matrix()[-1, 0], 15.015)
+        self.assertEqual(log['BATTERY'].shape, (12,))
+        self.assertAlmostEqual(log['BATTERY']['voltage'][0], 15.263)
+        self.assertAlmostEqual(log['BATTERY']['voltage'][-1], 15.015)
 
         # Test that the correct atlas sensor entries were loaded.
-        self.assertEqual(log['ATLAS_PH'].shape, (11, 1))
-        self.assertAlmostEqual(log['ATLAS_PH'].as_matrix()[0, 0], 7.054)
-        self.assertAlmostEqual(log['ATLAS_PH'].as_matrix()[-1, 0], 6.7)
+        self.assertEqual(log['ATLAS_PH'].shape, (11,))
+        self.assertAlmostEqual(log['ATLAS_PH']['ph'][0], 7.054)
+        self.assertAlmostEqual(log['ATLAS_PH']['ph'][-1], 6.7)
 
-        self.assertEqual(log['ATLAS_DO'].shape, (21, 1))
-        self.assertAlmostEqual(log['ATLAS_DO'].as_matrix()[0, 0], 10.15)
-        self.assertAlmostEqual(log['ATLAS_DO'].as_matrix()[-1, 0], 10.56)
+        self.assertEqual(log['ATLAS_DO'].shape, (21,))
+        self.assertAlmostEqual(log['ATLAS_DO']['do'][0], 10.15)
+        self.assertAlmostEqual(log['ATLAS_DO']['do'][-1], 10.56)
 
         # Test that the correct pose entries were loaded.
         self.assertEqual(log['pose'].shape, (211, 7))
@@ -108,18 +108,18 @@ class LogsTest(TestCase):
         log = platypus.io.logs.read_v4_2_0(log_str)
 
         # Test that the correct battery sensor entries were loaded.
-        self.assertEqual(log['BATTERY'].shape, (46, 3))
-        self.assertAlmostEqual(log['BATTERY'].as_matrix()[0, 0], 17.075)
-        self.assertAlmostEqual(log['BATTERY'].as_matrix()[-1, 0], 17.048)
+        self.assertEqual(log['BATTERY'].shape, (46,))
+        self.assertAlmostEqual(log['BATTERY']['voltage'][0], 17.075)
+        self.assertAlmostEqual(log['BATTERY']['voltage'][-1], 17.048)
 
         # Test that the correct atlas sensor entries were loaded.
-        self.assertEqual(log['ATLAS_PH'].shape, (10, 1))
-        self.assertAlmostEqual(log['ATLAS_PH'].as_matrix()[0, 0], 4.473)
-        self.assertAlmostEqual(log['ATLAS_PH'].as_matrix()[-1, 0], 4.448)
+        self.assertEqual(log['ATLAS_PH'].shape, (10,))
+        self.assertAlmostEqual(log['ATLAS_PH']['ph'][0], 4.473)
+        self.assertAlmostEqual(log['ATLAS_PH']['ph'][-1], 4.448)
 
-        self.assertEqual(log['ATLAS_DO'].shape, (14, 1))
-        self.assertAlmostEqual(log['ATLAS_DO'].as_matrix()[0, 0], 7.49)
-        self.assertAlmostEqual(log['ATLAS_DO'].as_matrix()[-1, 0], 7.47)
+        self.assertEqual(log['ATLAS_DO'].shape, (14,))
+        self.assertAlmostEqual(log['ATLAS_DO']['do'][0], 7.49)
+        self.assertAlmostEqual(log['ATLAS_DO']['do'][-1], 7.47)
 
         # Test that the correct pose entries were loaded.
         self.assertEqual(log['pose'].shape, (571, 7))
