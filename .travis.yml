@@ -4,6 +4,8 @@ python:
   - "3.5"
 # command to install dependencies
 install:
+  # Manually install `utm` via pip because it is not in the conda repos.
+  - pip install utm
   - sudo apt-get update
   # Do this conditionally because it saves us some downloading if the
   # version is the same.
