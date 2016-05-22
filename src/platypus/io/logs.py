@@ -364,7 +364,7 @@ def read_v4_0_0(logfile, filename):
         sensor_type: np.array(
             sensor_value,
             dtype=[('time', 'datetime64[ms]')] +
-                  [('channel' + i, float)
+                  [('channel{:d}'.format(i), float)
                    for i, _ in enumerate(sensor_value[0])]
         )
         for sensor_type, sensor_value in six.viewitems(data_sensors)
