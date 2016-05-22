@@ -34,16 +34,11 @@ setup(
             'import=platypus.io:import'
         ]
     },
-    test_suite="tests",
     install_requires=[
         'numpy',
         'pymongo',
         'scipy',
         'six',
         'utm'
-    ],
-    tests_require=[
-        'coverage',
-        'nose'
     ]
 )
