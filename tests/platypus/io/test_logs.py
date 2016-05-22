@@ -1,3 +1,4 @@
+import numpy
 import platypus.io.logs
 import os
 from unittest import TestCase
@@ -43,19 +44,18 @@ class LogsTest(TestCase):
 
     def test_read_v4_0_0_sensor(self):
         """ Test reading a v4.0.0 logfile with sensors. """
-        import numpy
-
         with open(TEST_LOG_V4_0_0_SENSOR_FILENAME) as log_file:
             log_v4_0_0_str = log_file.readlines()
         log_v4_0_0 = platypus.io.logs.read(
             log_v4_0_0_str, filename=TEST_LOG_V4_0_0_SENSOR_FILENAME)
 
         # Test that the correct battery sensor entries were loaded.
-        self.assertTrue(numpy.allclose(
-            log_v4_0_0['battery'][['voltage', 'm0_current', 'm1_current']],
-            numpy.array([[12.463, 9045.454102, 0.],
-                         [12.463, 0., 15.151515]])
-        ))
+        self.assertAlmostEqual(log_v4_0_0['battery']['voltage'][0], 12.463)
+        self.assertAlmostEqual(log_v4_0_0['battery']['m0_current'][0], 9045.454102)
+        self.assertAlmostEqual(log_v4_0_0['battery']['m1_current'][0], 0.)
+        self.assertAlmostEqual(log_v4_0_0['battery']['voltage'][-1], 12.463)
+        self.assertAlmostEqual(log_v4_0_0['battery']['m0_current'][-1], 0.)
+        self.assertAlmostEqual(log_v4_0_0['battery']['m1_current'][-1], 15.151515)
 
         # Test that the correct atlas_do sensor entries were loaded.
         self.assertTrue(numpy.allclose(
