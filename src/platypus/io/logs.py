@@ -352,7 +352,7 @@ def read_v4_0_0(logfile, filename):
         if k in _DATA_FIELDS_v4_0_0:
             fields = [('time', 'datetime64[ms]')]
             fields += [(field_name, float)
-                       for field_name in _DATA_FIELDS_v4_2_0[k]]
+                       for field_name in _DATA_FIELDS_v4_0_0[k]]
             data[k] = np.rec.array(v, dtype=fields)
 
     # Return merged data structure.
