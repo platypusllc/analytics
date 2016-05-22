@@ -30,7 +30,7 @@ install:
 
 # Run tests.
 script:
-  - nosetests --with-cov --cov platypus.io --cov platypus.util --cov-config .coveragerc --logging-level=INFO
+  - nosetests --with-cov --cov-config .coveragerc --logging-level=INFO
 
 # Calculate coverage.
 after_success:
