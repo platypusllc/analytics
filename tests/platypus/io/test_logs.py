@@ -95,7 +95,7 @@ class LogsTest(TestCase):
         self.assertAlmostEqual(log['ATLAS_DO']['do'][-1], 10.56)
 
         # Test that the correct pose entries were loaded.
-        self.assertEqual(log['pose'].shape, (211, 7))
+        self.assertEqual(log['pose'].shape, (211,))
         self.assertAlmostEqual(log['pose']['easting'][0], 337185.1208144073)
         self.assertAlmostEqual(log['pose']['northing'][0], 4467663.6643868135)
         self.assertAlmostEqual(log['pose']['easting'][-1], 337679.211030486)
@@ -122,7 +122,7 @@ class LogsTest(TestCase):
         self.assertAlmostEqual(log['ATLAS_DO']['do'][-1], 7.47)
 
         # Test that the correct pose entries were loaded.
-        self.assertEqual(log['pose'].shape, (571, 7))
+        self.assertEqual(log['pose'].shape, (571,))
         self.assertAlmostEqual(log['pose']['easting'][0], 592295.4032107397),
         self.assertAlmostEqual(log['pose']['northing'][0], 4481766.791869606)
         self.assertAlmostEqual(log['pose']['easting'][-1], 592300.9984074512)

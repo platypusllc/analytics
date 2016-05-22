@@ -174,7 +174,7 @@ def read_v4_2_0(logfile):
             # provide an unlabeled data frame.
             fields = [('time', 'datetime64[ms]')]
             fields += [float] * len(v[0])
-            data[k] = np.rec.array(v, dtype=fields)
+            data[k] = np.array(v, dtype=fields)
 
     return data
 
@@ -252,7 +252,7 @@ def read_v4_1_0(logfile):
             # provide an unlabeled data frame.
             fields = [('time', 'datetime64[ms]')]
             fields += [float] * len(v[0])
-            data[k] = np.rec.array(v, dtype=fields)
+            data[k] = np.array(v, dtype=fields)
 
     return data
 
@@ -361,7 +361,7 @@ def read_v4_0_0(logfile, filename):
     # For sensor types that we don't know how to handle,
     # provide an unlabeled data frame.
     unlabeled_sensor_data = {
-        sensor_type: np.rec.array(
+        sensor_type: np.array(
             sensor_value,
             dtype=[('time', 'datetime64[ms]')] + [float] * len(sensor_value[0])
         )
