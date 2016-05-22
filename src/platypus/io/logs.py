@@ -338,15 +338,15 @@ def read_v4_0_0(logfile, filename):
     data = {}
 
     data['pose'] = add_ll_to_pose_dataframe(
-            remove_outliers_from_pose_dataframe(
-                np.rec.array(data_pose, dtype=[('time', 'datetime64[ms]'),
-                                               ('easting', float),
-                                               ('northing', float),
-                                               ('altitude', float),
-                                               ('zone', int),
-                                               ('hemi', bool)])
-            )
+        remove_outliers_from_pose_dataframe(
+            np.rec.array(data_pose, dtype=[('time', 'datetime64[ms]'),
+                                           ('easting', float),
+                                           ('northing', float),
+                                           ('altitude', float),
+                                           ('zone', int),
+                                           ('hemi', bool)])
         )
+    )
 
     for k, v in six.viewitems(data_sensors):
         if k in _DATA_FIELDS_v4_0_0:
