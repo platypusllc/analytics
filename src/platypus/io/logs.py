@@ -74,6 +74,16 @@ Defines a regular expression that represents generic sensor record of the form:
 This format is used in v4.2.0 vehicle log entries.
 """
 
+_DATA_FIELDS_v4_0_0 = {
+    'battery': ('voltage', 'm0_current', 'm1_current'),
+    'es2': ('ec', 'temp'),
+    'atlas_do': ('do',),
+    'atlas_ph': ('ph',),
+}
+"""
+Defines dataframe field names for known data types in v4.0.0 logfiles.
+"""
+
 _DATA_FIELDS_v4_1_0 = {
     'BATTERY': ('voltage', 'm0_current', 'm1_current'),
     'ES2': ('ec', 'temp'),
@@ -169,12 +179,6 @@ def read_v4_2_0(logfile):
             fields += [(field_name, float)
                        for field_name in _DATA_FIELDS_v4_2_0[k]]
             data[k] = np.rec.array(v, dtype=fields)
-        else:
-            # For sensor types that we don't know how to handle,
-            # provide an unlabeled data frame.
-            fields = [('time', 'datetime64[ms]')]
-            fields += [float] * len(v[0])
-            data[k] = np.array(v, dtype=fields)
 
     return data
 
@@ -247,12 +251,6 @@ def read_v4_1_0(logfile):
             fields += [(field_name, float)
                        for field_name in _DATA_FIELDS_v4_2_0[k]]
             data[k] = np.rec.array(v, dtype=fields)
-        else:
-            # For sensor types that we don't know how to handle,
-            # provide an unlabeled data frame.
-            fields = [('time', 'datetime64[ms]')]
-            fields += [float] * len(v[0])
-            data[k] = np.array(v, dtype=fields)
 
     return data
 
@@ -339,38 +337,23 @@ def read_v4_0_0(logfile, filename):
     # For known types, clean up and label the data.
     data = {}
 
-    data['pose'] = add_ll_to_pose_dataframe(
-        remove_outliers_from_pose_dataframe(
-            np.rec.array(data_pose, dtype=[('time', 'datetime64[ms]'),
+    for k, v in six.viewitems(raw_data):
+        if k == 'pose':
+            data['pose'] = add_ll_to_pose_dataframe(
+                remove_outliers_from_pose_dataframe(
+                    np.rec.array(v, dtype=[('time', 'datetime64[ms]'),
                                            ('easting', float),
                                            ('northing', float),
                                            ('altitude', float),
                                            ('zone', int),
                                            ('hemi', bool)])
-        )
-    )
-
-    if 'es2' in data_sensors:
-        data['es2'] = np.rec.array(
-            data_sensors['es2'],
-            dtype=[('time', 'datetime64[ms]'),
-                   ('ec', float),
-                   ('temperature', float)]
-        )
-
-    # For sensor types that we don't know how to handle,
-    # provide an unlabeled data frame.
-    unlabeled_sensor_data = {
-        sensor_type: np.array(
-            sensor_value,
-            dtype=[('time', 'datetime64[ms]')] +
-                  [('channel{:d}'.format(i), float)
-                   for i, _ in enumerate(sensor_value[0])]
-        )
-        for sensor_type, sensor_value in six.viewitems(data_sensors)
-        if sensor_type not in data
-    }
-    data.update(unlabeled_sensor_data)
+                )
+            )
+        elif k in _DATA_FIELDS_v4_0_0:
+            fields = [('time', 'datetime64[ms]')]
+            fields += [(field_name, float)
+                       for field_name in _DATA_FIELDS_v4_2_0[k]]
+            data[k] = np.rec.array(v, dtype=fields)
 
     # Return merged data structure.
     return data
