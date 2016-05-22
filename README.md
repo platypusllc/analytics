@@ -1,6 +1,7 @@
 # Platypus Analytics #
 
 [![Build Status](https://travis-ci.org/platypusllc/analytics.svg)](https://travis-ci.org/platypusllc/analytics)
+[![Coverage Status](https://coveralls.io/repos/github/platypusllc/analytics/badge.svg?branch=master)](https://coveralls.io/github/platypusllc/analytics?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/platypus-analytics/badge/?version=latest)](http://platypus-analytics.readthedocs.org/en/latest/?badge=latest)
 
 Python library for Platypus data analysis.
