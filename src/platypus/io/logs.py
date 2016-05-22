@@ -337,19 +337,19 @@ def read_v4_0_0(logfile, filename):
     # For known types, clean up and label the data.
     data = {}
 
-    for k, v in six.viewitems(raw_data):
-        if k == 'pose':
-            data['pose'] = add_ll_to_pose_dataframe(
-                remove_outliers_from_pose_dataframe(
-                    np.rec.array(v, dtype=[('time', 'datetime64[ms]'),
-                                           ('easting', float),
-                                           ('northing', float),
-                                           ('altitude', float),
-                                           ('zone', int),
-                                           ('hemi', bool)])
-                )
+    data['pose'] = add_ll_to_pose_dataframe(
+            remove_outliers_from_pose_dataframe(
+                np.rec.array(data_pose, dtype=[('time', 'datetime64[ms]'),
+                                               ('easting', float),
+                                               ('northing', float),
+                                               ('altitude', float),
+                                               ('zone', int),
+                                               ('hemi', bool)])
             )
-        elif k in _DATA_FIELDS_v4_0_0:
+        )
+
+    for k, v in six.viewitems(data_sensors):
+        if k in _DATA_FIELDS_v4_0_0:
             fields = [('time', 'datetime64[ms]')]
             fields += [(field_name, float)
                        for field_name in _DATA_FIELDS_v4_2_0[k]]
