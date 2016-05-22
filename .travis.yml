@@ -22,7 +22,7 @@ install:
   - conda info -a
 
   # Install heavyweight dependencies using conda, then use setup.py for the rest.
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy coverage nosetests
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy coverage nose
   - source activate test-environment
   - python setup.py install
 
