@@ -43,7 +43,6 @@ setup(
         'utm'
     ],
     tests_require=[
-        'coverage',
-        'nose'
+        'coverage'
     ]
 )
