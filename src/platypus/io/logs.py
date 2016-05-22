@@ -363,7 +363,9 @@ def read_v4_0_0(logfile, filename):
     unlabeled_sensor_data = {
         sensor_type: np.array(
             sensor_value,
-            dtype=[('time', 'datetime64[ms]')] + [float] * len(sensor_value[0])
+            dtype=[('time', 'datetime64[ms]')] +
+                  [('channel' + i, float)
+                   for i, _ in enumerate(sensor_value[0])]
         )
         for sensor_type, sensor_value in six.viewitems(data_sensors)
         if sensor_type not in data
