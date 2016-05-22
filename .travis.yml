@@ -2,7 +2,8 @@ language: python
 python:
   - "2.7"
   - "3.5"
-# command to install dependencies
+# Command to install dependencies.
+# Adapted from: http://conda.pydata.org/docs/travis.html
 install:
   # Manually install `utm` via pip because it is not in the conda repos.
   - pip install utm
@@ -22,8 +23,8 @@ install:
   # Useful for debugging any issues with conda.
   - conda info -a
 
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION --file requirements.txt
+  # Install heavyweight dependencies using conda, then use setup.py for the rest.
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy
   - source activate test-environment
   - python setup.py install
 
