@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 from codecs import open  # To use a consistent encoding
 import os
-import pip
 
 # Get the current directory path.
 here = os.path.abspath(os.path.dirname(__file__))
@@ -9,15 +8,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Get the long description from the top-level README.
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
-
-# Get the dependencies from the requirements.txt file.
-# Based on: https://gist.github.com/rochacbruno/90efe90e6549721e4189
-requirements = pip.req.parse_requirements(
-    'requirements.txt', session=pip.download.PipSession())
-dependency_links = [str(item.link) for item in requirements
-                    if getattr(item, 'link', None)]
-install_requires = [str(item.req) for item in requirements
-                    if item.req]
 
 # Configure python distribution package.
 setup(
@@ -45,6 +35,15 @@ setup(
         ]
     },
     test_suite="tests",
-    install_requires=install_requires,
-    dependency_links=dependency_links
+    install_requires=[
+        'pandas',
+        'pymongo',
+        'pyserial',
+        'six',
+        'utm'
+    ],
+    tests_require=[
+        'coverage'
+        'nosetests'
+    ]
 )
