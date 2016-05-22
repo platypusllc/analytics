@@ -36,9 +36,9 @@ setup(
     },
     test_suite="tests",
     install_requires=[
-        'pandas',
+        'numpy',
         'pymongo',
-        'pyserial',
+        'scipy',
         'six',
         'utm'
     ],
