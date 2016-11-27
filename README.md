@@ -18,6 +18,7 @@ $ pip install git+https://github.com/platypusllc/analytics.git
 
 * **API documentation** can be found on [ReadTheDocs](http://platypus-analytics.readthedocs.org/en/latest/).
 * **Usage examples** of this library can be found in the [examples](examples) directory.
+* **IPython/Jupyter notebooks** using this library can be found in the [notebooks](notebooks) directory.
 
 [1]: http://docs.python-guide.org/en/latest/dev/virtualenvs/
 [2]: https://www.continuum.io/documentation
