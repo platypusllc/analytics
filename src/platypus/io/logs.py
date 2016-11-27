@@ -57,10 +57,10 @@ This format is used in v4.0.0 vehicle log entries.
 """
 
 _REGEX_ES2_V4_0_0 = re.compile(
-    r"^ES2: \[e, (?P<ec>[\d\.]+), (?P<temp>[\d\.]+)\]")
+    r"^ES2: \[e, (?P<ec>[\d\.]+), (?P<temperature>[\d\.]+)\]")
 """
 Defines a regular expression that represents a pose record of the form:
-'ES2: [e, <ec>, <temp>]'
+'ES2: [e, <ec>, <temperature>]'
 This format is used in v4.0.0 vehicle log entries.
 """
 
@@ -76,7 +76,7 @@ This format is used in v4.2.0 vehicle log entries.
 
 _DATA_FIELDS_v4_1_0 = {
     'BATTERY': ('voltage', 'm0_current', 'm1_current'),
-    'ES2': ('ec', 'temp'),
+    'ES2': ('ec', 'temperature'),
     'ATLAS_DO': ('do',),
     'ATLAS_PH': ('ph',),
 }
@@ -86,7 +86,7 @@ Defines dataframe field names for known data types in v4.1.0 logfiles.
 
 _DATA_FIELDS_v4_2_0 = {
     'BATTERY': ('voltage', 'm0_current', 'm1_current'),
-    'ES2': ('ec', 'temp'),
+    'ES2': ('ec', 'temperature'),
     'ATLAS_DO': ('do',),
     'ATLAS_PH': ('ph',),
 }
@@ -309,7 +309,7 @@ def read_v4_0_0(logfile, filename):
                 data_sensors['es2'] = []
             data_sensors['es2'].append([timestamp,
                                         float(m_es2.group('ec')),
-                                        float(m_es2.group('temp'))])
+                                        float(m_es2.group('temperature'))])
             continue
 
         m_sensor = _REGEX_SENSOR_V4_0_0.match(message)
