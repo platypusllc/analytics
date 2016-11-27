@@ -39,6 +39,7 @@ setup(
         'pymongo',
         'pyserial',
         'six',
+        'scipy',
         'utm'
     ],
     test_suite="tests",

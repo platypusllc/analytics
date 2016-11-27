@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Module containing utility conversion functions.
 Copyright 2015. Platypus LLC. All rights reserved.
