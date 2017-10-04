@@ -20,41 +20,6 @@ PATH2 = "/home/jason/Documents/INTCATCH/phone logs/Gardaland outlet/2017-10-4/"
 FILE1 = "platypus_20171004_040203"
 FILE2 = "platypus_20171004_054619"
 
-"""
-def trim_EC():
-    global PATH, FILE
-    print "\nLoading all the data in " + PATH + FILE + "\n"
-    data = platypus.io.logs.load(PATH + FILE)
-    if "ES2" in data:
-        print "ES2 sensor is present. Trimming all data within EC < 100 time windows\n"
-        # find all time windows where EC is exactly 0
-        ES2_data = data["ES2"]
-        values = ES2_data["ec"].values
-        ec_eq_zero_indices = np.where(values < 100)[0]
-        windows = list()
-        windows.append([ec_eq_zero_indices[0]])
-        left = ec_eq_zero_indices[0]
-        for ii in range(1, ec_eq_zero_indices.shape[0]):
-            i = ec_eq_zero_indices[ii]
-            if i - left > 5:
-                # there has been a jump in index, a new time window has started
-                windows[-1].append(left)
-                windows.append([i])
-            left = i
-        windows[-1].append(ec_eq_zero_indices[-1])
-        # print ec_eq_zero_indices
-        # print windows
-        for window in windows:
-            time_window = [ES2_data["ec"].index.values[window[0]], ES2_data["ec"].index.values[window[1]]]
-            for k in data.keys():
-                data[k] = data[k].loc[np.logical_or(data[k].index < time_window[0], data[k].index > time_window[1])]
-
-    else:
-        print "No ES2 sensor present. No trimming will be performed."
-
-    # do stuff with data
-"""
-
 def convert_timestamp(timestamp):
     t = (timestamp - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
     return datetime.datetime.utcfromtimestamp(t).time()
@@ -72,7 +37,7 @@ def merge_files(filename_list):
     all_data_types = set()
     for i in range(1, len(logfile_result_list)):
         all_data_types = all_data_types.union(set(logfile_result_list[i].keys()))
-    print all_data_types
+    print(all_data_types)
 
     # merged_dataframe = pandas.DataFrame.merge(merged_dataframe[data_type], dataframe_list[i][data_type], how='outer')
     merged_dataframe_dict = dict()
@@ -95,7 +60,7 @@ def trim_using_EC(dataframe, threshold=100):
     :return: trimmed dataframe
     """
     if "ES2" in dataframe:
-        print "ES2 sensor is present. Trimming all data within EC < {:.0f} time windows\n".format(threshold)
+        print(f"ES2 sensor is present. Trimming all data within EC < {threshold:.0f} time windows")
         # find all time windows where EC is exactly 0
         values = dataframe["ES2"]["ec"].values
         timestamps = dataframe["ES2"]["ec"].index.values
@@ -116,7 +81,7 @@ def trim_using_EC(dataframe, threshold=100):
             valid_data_ranges = [data.ix[data.index.indexer_between_time(start, end)] for start, end in valid_time_ranges]
             dataframe[sensor] = pandas.concat(valid_data_ranges)
     else:
-        print "No ES2 sensor present. No trimming will be performed."
+        print("No ES2 sensor present. No trimming will be performed.")
     return dataframe
 
 
@@ -179,9 +144,9 @@ def extract_sampler_data_by_jar():
     for k in jar_start_timestamps:
         start_time = jar_start_timestamps[k]
         end_time = start_time + datetime.timedelta(minutes=3.75)
-        print "Jar {} lasts from {} to {}".format(k, start_time, end_time)
+        print(f"Jar {k} lasts from {start_time} to {end_time}")
         for sensor in data.keys():
-            print sensor
+            print(sensor)
             if sensor not in ["ES2", "ATLAS_DO", "ATLAS_PH"]:
                 continue
             dataframe = trimmed_data[sensor]
