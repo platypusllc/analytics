@@ -3,7 +3,20 @@ Module containing utility conversion functions.
 Copyright 2015. Platypus LLC. All rights reserved.
 """
 import utm
+import numpy as np
+import datetime
 
+def convert_timestamp(timestamp):
+    """
+    Convert a timestamp given in numpy.datetime64 to datetime.time
+
+    :param timestamp: a timestamp
+    :type timestamp: numpy.datetime64
+    :returns: a converted timestamp
+    :rtype: datetime.time
+    """
+    t = (timestamp - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
+    return datetime.datetime.utcfromtimestamp(t).time()
 
 def add_ll_to_pose_dataframe(df):
     """
