@@ -95,6 +95,48 @@ Defines dataframe field names for known data types in v4.2.0 logfiles.
 """
 
 
+def merge_files(filename_list):
+    """
+
+    :param: filename_list: list of full path filename strings
+    :return: One result will all the dataframes merged
+    :rtype: {str: pandas.DataFrame}
+    """
+    logfile_result_list = [load(filename) for filename in filename_list]
+    if len(logfile_result_list) == 1:
+        return logfile_result_list[0]
+    all_data_types = set()
+    for i in range(1, len(logfile_result_list)):
+        all_data_types = all_data_types.union(set(logfile_result_list[i].keys()))
+    print all_data_types
+
+    merged_dataframe_dict = dict()
+
+    for data_type in all_data_types:
+        for i in range(len(logfile_result_list)):
+            if data_type in logfile_result_list[i]:
+                first_log_index = i
+                break
+        merged_dataframe_dict[data_type] = logfile_result_list[first_log_index][data_type]
+        for i in range(first_log_index + 1, len(logfile_result_list)):
+            if data_type in logfile_result_list[i]:
+                merged_dataframe_dict[data_type] = merged_dataframe_dict[data_type].combine_first(logfile_result_list[i][data_type]).dropna(how='any')
+    return merged_dataframe_dict
+
+
+def read_around_sampler(logfile, pump_duration_seconds=4*60):
+    """
+    Reads text logs from a Platypus vehicle server logfile, particularly focusing on data following a sampler jar activation
+
+    :param logfile: the logfile as an iterable
+    :param pump_duration_seconds: an integer, the number of seconds to extract data
+    :return: a dict containing the data from this logfile
+    :rtype: {int: pandas.DataFrame}, where int key is jar number (1-4)
+    """
+    #TODO
+    return
+
+
 def read_v4_2_0(logfile):
     """
     Reads text logs from a Platypus vehicle server logfile.

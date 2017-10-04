@@ -8,10 +8,15 @@ import six
 import re
 import pandas
 
+# FILE TO TEST JAR DATA EXTRACTION
 PATH = "/home/jason/Documents/INTCATCH/phone logs/Gardaland outlet/2017-10-3/"
 FILE = "platypus_20171003_050016"
 EXT = ".txt"
 
+# FILES TO TEST MERGING
+PATH2 = "/home/jason/Documents/INTCATCH/phone logs/Gardaland outlet/2017-10-4/"
+FILE1 = "platypus_20171004_040203"
+FILE2 = "platypus_20171004_054619"
 
 """
 def trim_EC():
@@ -49,6 +54,36 @@ def trim_EC():
 """
 
 
+def merge_files(filename_list):
+    """
+
+    :param: filename_list: list of full path filename strings
+    :return: One result will all the dataframes merged
+    :rtype: {str: pandas.DataFrame}
+    """
+    logfile_result_list = [platypus.io.logs.load(filename) for filename in filename_list]
+    if len(logfile_result_list) == 1:
+        return logfile_result_list[0]
+    all_data_types = set()
+    for i in range(1, len(logfile_result_list)):
+        all_data_types = all_data_types.union(set(logfile_result_list[i].keys()))
+    print all_data_types
+
+    # merged_dataframe = pandas.DataFrame.merge(merged_dataframe[data_type], dataframe_list[i][data_type], how='outer')
+    merged_dataframe_dict = dict()
+
+    for data_type in all_data_types:
+        for i in range(len(logfile_result_list)):
+            if data_type in logfile_result_list[i]:
+                first_log_index = i
+                break
+        merged_dataframe_dict[data_type] = logfile_result_list[first_log_index][data_type]
+        for i in range(first_log_index + 1, len(logfile_result_list)):
+            if data_type in logfile_result_list[i]:
+                merged_dataframe_dict[data_type] = merged_dataframe_dict[data_type].combine_first(logfile_result_list[i][data_type]).dropna(how='any')
+    return merged_dataframe_dict
+
+
 def trim_using_EC(dataframe, threshold=100):
     """
     Trims any data when EC < 100
@@ -82,9 +117,7 @@ def trim_using_EC(dataframe, threshold=100):
     return dataframe
 
 
-def data_with_sampler():
-    global PATH, FILE
-    filename = PATH + FILE + EXT
+def data_with_sampler(filename):
     data = platypus.io.logs.load(filename)
     is_EC_gt_100 = False
 
@@ -135,11 +168,10 @@ def data_with_sampler():
     return data, jar_start_timestamps
 
 
-if __name__ == "__main__":
-    global PATH, FILE
+def extract_sampler_data_by_jar():
+    global PATH, FILE, EXT
     filename = PATH + FILE + EXT
-
-    data, jar_start_timestamps = data_with_sampler()
+    data, jar_start_timestamps = data_with_sampler(filename)
     trimmed_data = trim_using_EC(data)
     for k in jar_start_timestamps:
         start_time = jar_start_timestamps[k]
@@ -153,5 +185,11 @@ if __name__ == "__main__":
             relevantframe = dataframe.between_time(start_time.time(), end_time.time())
             output_filename = PATH + FILE + "__JAR_{}".format(k) + "__{}".format(sensor) + ".csv"
             relevantframe.to_csv(output_filename)
+
+
+if __name__ == "__main__":
+    merged_data = merge_files([PATH2 + FILE1 + EXT, PATH2 + FILE2 + EXT])
+
+
 
 
