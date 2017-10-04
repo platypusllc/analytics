@@ -7,6 +7,8 @@ import json
 import six
 import re
 import pandas
+from itertools import groupby
+
 
 # FILE TO TEST JAR DATA EXTRACTION
 PATH = "/home/jason/Documents/INTCATCH/phone logs/Gardaland outlet/2017-10-3/"
@@ -53,6 +55,9 @@ def trim_EC():
     # do stuff with data
 """
 
+def convert_timestamp(timestamp):
+    t = (timestamp - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
+    return datetime.datetime.utcfromtimestamp(t).time()
 
 def merge_files(filename_list):
     """
@@ -92,26 +97,24 @@ def trim_using_EC(dataframe, threshold=100):
     if "ES2" in dataframe:
         print "ES2 sensor is present. Trimming all data within EC < {:.0f} time windows\n".format(threshold)
         # find all time windows where EC is exactly 0
-        ES2_data = dataframe["ES2"]
-        values = ES2_data["ec"].values
-        ec_eq_zero_indices = np.where(values < threshold)[0]
-        windows = list()
-        windows.append([ec_eq_zero_indices[0]])
-        left = ec_eq_zero_indices[0]
-        for ii in range(1, ec_eq_zero_indices.shape[0]):
-            i = ec_eq_zero_indices[ii]
-            if i - left > 5:
-                # there has been a jump in index, a new time window has started
-                windows[-1].append(left)
-                windows.append([i])
-            left = i
-        windows[-1].append(ec_eq_zero_indices[-1])
-        # print ec_eq_zero_indices
-        # print windows
-        for window in windows:
-            time_window = [ES2_data["ec"].index.values[window[0]], ES2_data["ec"].index.values[window[1]]]
-            for k in dataframe:
-                dataframe[k] = dataframe[k].loc[np.logical_or(dataframe[k].index < time_window[0], dataframe[k].index > time_window[1])]
+        values = dataframe["ES2"]["ec"].values
+        timestamps = dataframe["ES2"]["ec"].index.values
+
+        ec_non_zero_indices = np.where(values > threshold)[0]
+    
+        # Compute time ranges during which ec has values over threshold
+        valid_time_ranges = []
+        for k, g in groupby(enumerate(ec_non_zero_indices), lambda x: x[0]-x[1]):
+            group = list(g)
+            start_time = convert_timestamp(timestamps[group[0][1]])
+            end_time = convert_timestamp(timestamps[group[-1][1]])
+
+        valid_time_ranges.append((start_time, end_time))
+
+        # Trim all collected sensor data to lie within the computed time ranges
+        for sensor, data in dataframe.items():
+            valid_data_ranges = [data.ix[data.index.indexer_between_time(start, end)] for start, end in valid_time_ranges]
+            dataframe[sensor] = pandas.concat(valid_data_ranges)
     else:
         print "No ES2 sensor present. No trimming will be performed."
     return dataframe
