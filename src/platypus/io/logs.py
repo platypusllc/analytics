@@ -108,7 +108,7 @@ def merge_files(filename_list):
     all_data_types = set()
     for i in range(1, len(logfile_result_list)):
         all_data_types = all_data_types.union(set(logfile_result_list[i].keys()))
-    print all_data_types
+    print(all_data_types)
 
     merged_dataframe_dict = dict()
 
