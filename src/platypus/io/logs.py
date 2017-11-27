@@ -185,10 +185,12 @@ def read_v4_2_0(logfile):
                     v['p'][2],
                     zone, hemi
                 ])
-            elif k == 'sensor':
-                raw_data[v['type']].append(
-                    [timestamp] + v['data']
-                )
+            elif k == 'sensor':            
+                try:
+                    raw_data[v['type']].append([timestamp] + v['data'])
+                except:
+                    # do nothing
+                    None
             else:
                 pass
 
