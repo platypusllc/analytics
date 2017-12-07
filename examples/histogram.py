@@ -56,14 +56,23 @@ def trim_using_EC(dataframe, threshold=100):
     return dataframe
 
 
-folders = ['/home/shawn/day4','/home/shawn/day3','/home/shawn/day2','/home/shawn/day1']
+folders = ['/home/shawn/day4','/home/shawn/day3','/home/shawn/day2','/home/shawn/day1', '/home/shawn/all']
 
 for folder in folders:
     data = platypus.io.logs.merge_files(glob.glob(folder+'/*.txt'))
     data = trim_using_EC(data, 200)
 
-    channel = 'ph'
-    sensor ='ATLAS_PH'
+    # channel = 'ph'
+    # sensor ='ATLAS_PH'
+    # bins = np.arange(5.5, 9 + 0.5, 0.25)
+
+    # channel = 'ec'
+    # sensor ='ES2'
+    # bins = np.arange(200,1800,100)
+    
+    channel = 'temperature'
+    sensor ='ES2'
+    bins = np.arange(6,13,0.5)
 
     # Get the standard deviation of the ES2 data.
     es2_stddev = data[sensor][channel].std()
@@ -73,16 +82,15 @@ for folder in folders:
     es2_mean = data[sensor][channel].mean()
     print channel+" mean", es2_mean
 
-    # bins = np.arange(6,13,0.5)
-    # bins = np.arange(200,1800,100)
-    bins = np.arange(5.5, 9 + 0.5, 0.25)
     # n, bins, patches = plt.hist(data[sensor][channel], bins=xrange(200,1600,100))
-    n, bins, patches = plt.hist(data[sensor][channel], normed=False, bins=bins)
+    weights = np.ones_like(data[sensor][channel])/float(len(data[sensor][channel]))
+    n, bins, patches = plt.hist(data[sensor][channel], weights=weights, bins=bins)
 
     print n, bins, patches
 
     plt.xlabel(channel)
-    plt.ylabel('Counts')
+    plt.ylabel('Percentage')
+    plt.ylim(0,1)
     plt.title('Histogram of ' + channel + ' ' + folder.split('/')[-1])
     plt.savefig('Histogram of ' + channel + ' ' + folder.split('/')[-1]+'.png')
     # plt.text(0, .25, "Standard Dev: " + str(es2_stddev))
