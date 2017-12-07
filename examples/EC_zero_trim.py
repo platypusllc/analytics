@@ -7,6 +7,8 @@ import json
 import six
 import re
 import pandas
+import glob
+
 
 # FILE TO TEST JAR DATA EXTRACTION
 PATH = "/home/jason/Documents/INTCATCH/phone logs/Gardaland outlet/2017-10-3/"
@@ -188,7 +190,7 @@ def extract_sampler_data_by_jar():
 
 
 if __name__ == "__main__":
-    merged_data = merge_files([PATH2 + FILE1 + EXT, PATH2 + FILE2 + EXT])
+    merged_data = merge_files(glob.glob("/home/shawn/day2/*.txt"))
 
 
 

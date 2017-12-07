@@ -18,6 +18,7 @@ import platypus.util.conversions
 import glob
 import os
 import numpy as np
+import plotly.plotly as py
 
 # Read the data log from file.
 # Note: for log versions <5.0, this filename must be 'airboat_[timestamp].txt].
@@ -55,47 +56,37 @@ def trim_using_EC(dataframe, threshold=100):
     return dataframe
 
 
-sensor = "ES2"
-channel = 'temperature'
+folders = ['/home/shawn/day4','/home/shawn/day3','/home/shawn/day2','/home/shawn/day1']
 
-for folder in glob.glob('/home/shawn/day*/'):
-	print "processing folder: ", folder
-	for file in glob.glob(folder+'*.txt'):
-		print file
-		out_name = os.path.basename(os.path.splitext(file)[0])
-		print out_name
+for folder in folders:
+    data = platypus.io.logs.merge_files(glob.glob(folder+'/*.txt'))
+    data = trim_using_EC(data, 200)
 
-		data = platypus.io.logs.merge_files(glob.glob(folder+"/*.txt"))
-		data = trim_using_EC(data, 200)
+    channel = 'ph'
+    sensor ='ATLAS_PH'
 
-		# Access the first 100 GPS locations for the vehicle.
-		poses = data['pose']
+    # Get the standard deviation of the ES2 data.
+    es2_stddev = data[sensor][channel].std()
+    print channel +" std", es2_stddev
 
-		output_base = folder+out_name+"_"+channel
+    # Get the mean of the ES2 data.
+    es2_mean = data[sensor][channel].mean()
+    print channel+" mean", es2_mean
 
-		plt.title("Path of vehicle: " + out_name)
-		# Plot the first 100 GPS locations as UTM coordinates using matplotlib.
-		plt.plot(poses['easting'], poses['northing'])
-		plt.savefig(output_base + "_path.png")
-		# plt.show()
-		plt.clear()
+    # bins = np.arange(6,13,0.5)
+    # bins = np.arange(200,1800,100)
+    bins = np.arange(5.5, 9 + 0.5, 0.25)
+    # n, bins, patches = plt.hist(data[sensor][channel], bins=xrange(200,1600,100))
+    n, bins, patches = plt.hist(data[sensor][channel], normed=False, bins=bins)
 
-		# Retrieve temperature data from the ES2 sensor.
-		# temp = data[sensor]['temp']
+    print n, bins, patches
 
-
-		# Plot ES2 electrical conductivity data using matplotlib.
-
-		# print data[sensor][channel]
-
-		plt.title("Graph of "+channel+" data: " + out_name)
-		plt.plot(data[sensor].index, data[sensor][channel])
-		# plt.savefig(folder+"_"+channel+"_graph.png")
-		plt.savefig(output_base + "_graph.png")
-
-		# plt.show()
-		plt.clear()
-
-		# Get the standard deviation of the ES2 data.
-		es2_stddev = data[sensor].std()
-		print "deviation", es2_stddev
+    plt.xlabel(channel)
+    plt.ylabel('Counts')
+    plt.title('Histogram of ' + channel + ' ' + folder.split('/')[-1])
+    plt.savefig('Histogram of ' + channel + ' ' + folder.split('/')[-1]+'.png')
+    # plt.text(0, .25, "Standard Dev: " + str(es2_stddev))
+    plt.figtext(.16, .75, "Mean: " + str(es2_mean))
+    plt.figtext(.16, .7, "std: " + str(es2_stddev))
+    plt.grid(True)
+    plt.show()
