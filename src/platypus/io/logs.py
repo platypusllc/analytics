@@ -85,10 +85,13 @@ Defines dataframe field names for known data types in v4.1.0 logfiles.
 """
 
 _DATA_FIELDS_v4_2_0 = {
-    'BATTERY': ('voltage', 'm0_current', 'm1_current'),
+    'BATTERY': ('voltage',),
     'ES2': ('ec', 'temperature'),
     'ATLAS_DO': ('do',),
     'ATLAS_PH': ('ph',),
+    'EC_GOSYS': ('ec',),
+    'T_GOSYS': ('temperature',),
+    'DO_GOSYS': ('do',)
 }
 """
 Defines dataframe field names for known data types in v4.2.0 logfiles.
@@ -97,19 +100,14 @@ Defines dataframe field names for known data types in v4.2.0 logfiles.
 
 def merge_files(filename_list):
     """
-
     :param: filename_list: list of full path filename strings
-    :return: One result will all the dataframes merged
+    :return: One result with all the dataframes merged
     :rtype: {str: pandas.DataFrame}
     """
     logfile_result_list = [load(filename) for filename in filename_list]
     if len(logfile_result_list) == 1:
         return logfile_result_list[0]
-    #all_data_types = set()
-    #for i in range(1, len(logfile_result_list)):
-    #    all_data_types = all_data_types.union(set(logfile_result_list[i].keys()))
     all_data_types = {key for log_dict in logfile_result_list for key in log_dict.keys()}    
-    print all_data_types
 
     merged_dataframe_dict = dict()
 
@@ -187,9 +185,11 @@ def read_v4_2_0(logfile):
                 ])
             elif k == 'sensor':            
                 try:
-                    raw_data[v['type']].append([timestamp] + v['data'])
-                except:
+                    # print("Parsing sensor type {}, value = {}".format(v['type'], v['data']))
+                    raw_data[v['type']].append([timestamp, v['data']])
+                except Exception, e:
                     # do nothing
+                    print("WARNING: Could not parse {}, {} b/c error\n{}".format(k, v, str(e)))
                     None
             else:
                 pass
@@ -209,12 +209,14 @@ def read_v4_2_0(logfile):
                 )
             )
         elif k in _DATA_FIELDS_v4_2_0:
+            print("Found known data type {}".format(k))
             data[k] = (pandas.DataFrame(
                 v, columns=('time',) + _DATA_FIELDS_v4_2_0[k])
                 .set_index('time'))
         else:
             # For sensor types that we don't know how to handle,
-            # provide an unlabeled data frame.
+            # provide an unlabeled data frame.            
+            print("Found UNKNOWN data type {}".format(k))
             data[k] = (pandas.DataFrame(v)
                        .rename(columns={0: 'time'}, copy=False)
                        .set_index('time'))
@@ -467,13 +469,16 @@ def read(logfile, filename=None):
     # Depending on the format of the first line, pick an appropriate loader.
     if len(components[1]) == 1:
         # Version 4.2.0 files have a single-character log-level.
+        print "file is Version 4.2.0 type"
         return read_v4_2_0(logfile)
     else:
         try:
             # Version 4.1.0 logs have JSON messages.
+            print "file is Version 4.1.0 type"
             json.loads(components[2])
             return read_v4_1_0(logfile)
         except ValueError:
+            print "file is Version 4.0.0 type"
             # If all else fails, use the version 4.0.0 parser.
             return read_v4_0_0(logfile, filename=filename)
 
