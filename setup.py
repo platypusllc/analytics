@@ -35,12 +35,17 @@ setup(
         ]
     },
     install_requires=[
+        'pillow',
         'pandas',
         'pymongo',
         'pyserial',
         'six',
         'scipy',
-        'utm'
+        'utm',
+        'matplotlib',
+        'jupyter',
+        'ipyleaflet',
+        'sklearn'
     ],
     test_suite="tests",
 )

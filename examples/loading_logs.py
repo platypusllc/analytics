@@ -56,46 +56,47 @@ def trim_using_EC(dataframe, threshold=100):
 
 
 sensor = "ES2"
-channel = 'temperature'
+channel = 'ec'
 
-for folder in glob.glob('/home/shawn/day*/'):
-	print "processing folder: ", folder
-	for file in glob.glob(folder+'*.txt'):
-		print file
-		out_name = os.path.basename(os.path.splitext(file)[0])
-		print out_name
+for folder in glob.glob('/home/shawn/NL2/nordpolder_van_delfgauw/'):
+    print "processing folder: ", folder
+    for file in glob.glob(folder+'platypus_20180215_104248.txt'):
+        if (os.path.exists(file)):
+            print file
+            out_name = os.path.basename(os.path.splitext(file)[0])
+            print out_name
 
-		data = platypus.io.logs.merge_files(glob.glob(folder+"/*.txt"))
-		data = trim_using_EC(data, 200)
+            data = platypus.io.logs.merge_files(glob.glob(folder+"/*.txt"))
+            data = trim_using_EC(data, 100)
 
-		# Access the first 100 GPS locations for the vehicle.
-		poses = data['pose']
+            # Access the first 100 GPS locations for the vehicle.
+            poses = data['pose']
 
-		output_base = folder+out_name+"_"+channel
+            output_base = folder+out_name+"_"+channel
 
-		plt.title("Path of vehicle: " + out_name)
-		# Plot the first 100 GPS locations as UTM coordinates using matplotlib.
-		plt.plot(poses['easting'], poses['northing'])
-		plt.savefig(output_base + "_path.png")
-		# plt.show()
-		plt.clear()
+            # plt.title("Path of vehicle: " + out_name)
+            # # Plot the first 100 GPS locations as UTM coordinates using matplotlib.
+            # plt.plot(poses['easting'], poses['northing'])
+            # plt.savefig(output_base + "_path.png")
+            # plt.show()
+            # # plt.clear()
 
-		# Retrieve temperature data from the ES2 sensor.
-		# temp = data[sensor]['temp']
+            # Retrieve temperature data from the ES2 sensor.
+            # temp = data[sensor]['temp']
 
 
-		# Plot ES2 electrical conductivity data using matplotlib.
+            # Plot ES2 electrical conductivity data using matplotlib.
 
-		# print data[sensor][channel]
+            # print data[sensor][channel]
 
-		plt.title("Graph of "+channel+" data: " + out_name)
-		plt.plot(data[sensor].index, data[sensor][channel])
-		# plt.savefig(folder+"_"+channel+"_graph.png")
-		plt.savefig(output_base + "_graph.png")
+            plt.title("Graph of "+channel+" data: " + out_name)
+            plt.plot(data[sensor].index, data[sensor][channel])
+            # plt.savefig(folder+"_"+channel+"_graph.png")
+            plt.savefig(output_base + "_graph.png")
 
-		# plt.show()
-		plt.clear()
+            plt.show()
+            # plt.clear()
 
-		# Get the standard deviation of the ES2 data.
-		es2_stddev = data[sensor].std()
-		print "deviation", es2_stddev
+            # Get the standard deviation of the ES2 data.
+            es2_stddev = data[sensor].std()
+            print "deviation", es2_stddev
