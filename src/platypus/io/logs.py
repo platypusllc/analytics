@@ -91,7 +91,8 @@ _DATA_FIELDS_v4_2_0 = {
     'ATLAS_PH': ('ph',),
     'EC_GOSYS': ('ec',),
     'T_GOSYS': ('temperature',),
-    'DO_GOSYS': ('do',)
+    'DO_GOSYS': ('do',),
+    'PH_GOSYS': ('pH',)
 }
 """
 Defines dataframe field names for known data types in v4.2.0 logfiles.
