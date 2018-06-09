@@ -94,6 +94,17 @@ _DATA_FIELDS_v4_2_0 = {
 Defines dataframe field names for known data types in v4.2.0 logfiles.
 """
 
+_DATA_FIELDS_v4_3_0 = {
+    'BATTERY': ('voltage',),
+    'EC_DECAGON': ('ec',),
+    'T_DECAGON': ('temperature',),
+    'DO_ATLAS': ('do',),
+    'PH_ATLAS': ('ph',),
+}
+"""
+Defines dataframe field names for known data types in v4.2.0 logfiles.
+"""
+
 
 def merge_files(filename_list):
     """
@@ -136,6 +147,92 @@ def read_around_sampler(logfile, pump_duration_seconds=4*60):
     """
     #TODO
     return
+
+
+def read_v4_3_0(logfile):
+    """
+    Reads text logs from a Platypus vehicle server logfile.
+
+    :param logfile: the logfile as an iterable
+    :type  logfile: python file-like
+    :returns: a dict containing the data from this logfile
+    :rtype: {str: pandas.DataFrame}
+    """
+    raw_data = collections.defaultdict(list)
+    start_time = datetime.datetime.utcfromtimestamp(0)
+
+    for line in logfile:
+        # Extract each line fron the logfile and convert the timestamp.
+        time_offset_ms, level, message = line.split('\t', 2)
+
+        # Compute the timestamp for each log entry.
+        time_offset = datetime.timedelta(milliseconds=int(time_offset_ms))
+        timestamp = start_time + time_offset
+
+        # Try to parse the log as a JSON object.
+        try:
+            entry = json.loads(message)
+        except ValueError as e:
+            raise ValueError(
+                "Aborted after invalid JSON log message '{:s}': {:s}"
+                .format(message, e))
+
+        # If the line is a datetime, compute subsequent timestamps from this.
+        # We assume that "date" and "time" are always together in the entry.
+        if 'date' in entry:
+            timestamp = datetime.datetime.utcfromtimestamp(
+                entry['time'] / 1000.)
+            start_time = timestamp - time_offset
+
+        # Extract appropriate data from each entry.
+        for k, v in six.viewitems(entry):
+            if k == 'pose':
+                zone = int(v['zone'][:-5])
+                hemi = v['zone'].endswith('North')
+                raw_data[k].append([
+                    timestamp,
+                    v['p'][0],
+                    v['p'][1],
+                    v['p'][2],
+                    zone, hemi
+                ])
+            elif k == 'sensor':            
+                try:
+
+
+                    raw_data[v['type']].append([timestamp] + [v['data']])
+                except:
+                    # do nothing
+                    None
+            else:
+                pass
+
+    # Convert the list data to pandas DataFrames and return them.
+    # For known types, clean up and label the data.
+    data = {}
+
+    for k, v in six.viewitems(raw_data):
+        if k == 'pose':
+            data['pose'] = add_ll_to_pose_dataframe(
+                remove_outliers_from_pose_dataframe(
+                    pandas.DataFrame(v, columns=('time',
+                                                 'easting', 'northing',
+                                                 'altitude', 'zone', 'hemi'))
+                            .set_index('time')
+                )
+            )
+        elif k in _DATA_FIELDS_v4_3_0:
+            data[k] = (pandas.DataFrame(
+                v, columns=('time',) + _DATA_FIELDS_v4_3_0[k])
+                .set_index('time'))
+        else:
+            print 'other'
+            # For sensor types that we don't know how to handle,
+            # provide an unlabeled data frame.
+            data[k] = (pandas.DataFrame(v)
+                       .rename(columns={0: 'time'}, copy=False)
+                       .set_index('time'))
+    return data
 
 
 def read_v4_2_0(logfile):
@@ -187,6 +284,8 @@ def read_v4_2_0(logfile):
                 ])
             elif k == 'sensor':            
                 try:
+
+
                     raw_data[v['type']].append([timestamp] + v['data'])
                 except:
                     # do nothing
@@ -205,7 +304,7 @@ def read_v4_2_0(logfile):
                     pandas.DataFrame(v, columns=('time',
                                                  'easting', 'northing',
                                                  'altitude', 'zone', 'hemi'))
-                          .set_index('time')
+                            .set_index('time')
                 )
             )
         elif k in _DATA_FIELDS_v4_2_0:
@@ -218,7 +317,6 @@ def read_v4_2_0(logfile):
             data[k] = (pandas.DataFrame(v)
                        .rename(columns={0: 'time'}, copy=False)
                        .set_index('time'))
-
     return data
 
 
@@ -406,6 +504,18 @@ def read_v4_0_0(logfile, filename):
     # Return merged data structure.
     return data
 
+
+def load_v4_3_0(filename, *args, **kwargs):
+    """
+    Loads a log from a v4.2.0 server from a filename.
+
+    :param filename: path to a log file
+    :type  filename: string
+    :returns: a dict containing the data from this logfile
+    :rtype: {str: numpy.recarray}
+    """
+    with open(filename, 'r') as logfile:
+        return read_v4_3_0(logfile)
 
 def load_v4_2_0(filename, *args, **kwargs):
     """
