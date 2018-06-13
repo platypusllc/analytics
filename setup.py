@@ -45,7 +45,8 @@ setup(
         'matplotlib',
         'jupyter',
         'ipyleaflet',
-        'sklearn'
+        'sklearn',
+        'flask'
     ],
     test_suite="tests",
 )
