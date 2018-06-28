@@ -54,8 +54,6 @@ def generate_overlay(log_file, sensor_id, min_ec):
         log_path + log_file + log_ext
     ]
 
-
-
     data = platypus.io.logs.merge_files(log_filenames)
 
     (sensor_name, sensor_channel, sensor_units) = sensor_id_to_name(sensor_id)
