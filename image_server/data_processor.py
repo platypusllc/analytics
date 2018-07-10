@@ -34,14 +34,29 @@ def sensor_id_to_name(id):
 
     return (sensor_name, sensor_channel, sensor_units)
 
-def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
+def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbidity_bounds):
+    print "processing: " + log_file
+    min_ec = ec_bounds[0]
+    max_ec = ec_bounds[1]
+    min_ph = ph_bounds[0]
+    max_ph = ph_bounds[1]
+    min_turbidity = turbidity_bounds[0]
+    max_turbidity = turbidity_bounds[1]
+    data_padding = [0.0000001, 0.0000001]   # degrees lat/lon
+    data_resolution = [0.00001, 0.00001] # degrees lat/lon
+    data_interpolation_radius = 0.00001 # degrees lat/lon
+
+    data_boundaries = [[37.751816, -122.384368], [37.764696, -122.366599]]
+
     # read the old generation stats file
     stat_in = {}
+    old_stats = {"settings": {}}
 
     try:
         with open("./stats/"+log_file+'.json', 'r') as infile:
             print "reading previous stats from: " + "./stats/"+log_file+'.json'
             stats_in = json.load(infile)
+            old_stats = stat_in[str(sensor_id)]
     except:
         print "failed to load from input stats file"
 
@@ -52,6 +67,13 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
     data_stats["settings"]["sensor_id"] = sensor_id
     data_stats["settings"]["ec_bounds"] = ec_bounds
     data_stats["settings"]["ph_bounds"] = ph_bounds
+    data_stats["settings"]["turbidity_bounds"] = turbidity_bounds
+
+    print(str(data_stats["settings"]))
+
+    if (data_stats["settings"] == old_stats["settings"]):
+        print "old processing settings == new processing settings. don't re-run"
+        return
 
     # Import the data from the specified logfile
 
@@ -65,18 +87,11 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
             print "Error. log does not exist: " + log_path  + log_file + log_ext
             return False
 
-    log_filenames = [
-        log_path + log_file + log_ext
-    ]
-
-    data = platypus.io.logs.merge_files(log_filenames)
+    data = platypus.io.logs.load(log_path+log_file+log_ext)
 
     (sensor_name, sensor_channel, sensor_units) = sensor_id_to_name(sensor_id)
 
     # Define useful access variables.
-    pose = data['pose']
-
-    data_boundaries = [ [37.751816, -122.384368], [37.764696, -122.366599]]
     if (data_boundaries != []):
         print "Trimming all data within long/lat = "+str(data_boundaries)
         # find all time windows where EC is exactly 0
@@ -86,8 +101,14 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
         values_lon = ES2_data["longitude"].values
 
     #     ec_eq_zero_indices = np.where(values == 0)[0]
-        ec_eq_zero_indices = np.where( (values_lat < data_boundaries[0][0]) | (values_lat > data_boundaries[1][0]) |
-            (values_lon < data_boundaries[0][1]) | (values_lon > data_boundaries[1][1]) )[0]
+        lat_min = min(data_boundaries[0][0], data_boundaries[1][0])
+        lat_max = max(data_boundaries[0][0], data_boundaries[1][0])
+        lon_min = min(data_boundaries[0][1], data_boundaries[1][1])
+        lon_max = max(data_boundaries[0][1], data_boundaries[1][1])
+        print lat_min, lat_max, " | ", lon_min, lon_max
+        ec_eq_zero_indices = np.where( (values_lat < lat_min) | (values_lat > lat_max) |
+                                       (values_lon < lon_min) | (values_lon > lon_max)
+                                     )[0]
         
         if (len(ec_eq_zero_indices) == 0):
             print "no poses outside the bounds"
@@ -177,10 +198,6 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
     # else:
     #     print "No ES2 sensor present. No trimming will be performed."
 
-
-    min_ec = ec_bounds[0]
-    max_ec = ec_bounds[1]
-
     if "EC_DECAGON" in data:
         print "ES2 sensor is present. Trimming all data within EC = "+str(min_ec)+" time windows\n"
         # find all time windows where EC is exactly 0
@@ -189,30 +206,29 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
 
     #     ec_eq_zero_indices = np.where(values == 0)[0]
         ec_eq_zero_indices = np.where( (values < min_ec) | (values > max_ec) )[0] # | out_of_bouds_lat | out_of_bouds_lon )[0]
-    #     ec_eq_zero_indices = np.where(values < 50)[0]
-        windows = list()
-        windows.append([ec_eq_zero_indices[0]])
-        left = ec_eq_zero_indices[0]
-        for ii in range(1, ec_eq_zero_indices.shape[0]):
-            i = ec_eq_zero_indices[ii]
-            if i - left > 5:
-                # there has been a jump in index, a new time window has started
-                windows[-1].append(left)
-                windows.append([i])
-            left = i
-        windows[-1].append(ec_eq_zero_indices[-1])
-        # print ec_eq_zero_indices
-        # print windows
-        for window in windows:
-            time_window = [ES2_data["ec"].index.values[window[0]], ES2_data["ec"].index.values[window[1]]]
-            for k in data:
-                data[k] = data[k].loc[np.logical_or(data[k].index < time_window[0], data[k].index > time_window[1])]
+        if (len(ec_eq_zero_indices) == 0):
+            print "no ec data to trim"
+        else:
+            windows = list()
+            windows.append([ec_eq_zero_indices[0]])
+            left = ec_eq_zero_indices[0]
+            for ii in range(1, ec_eq_zero_indices.shape[0]):
+                i = ec_eq_zero_indices[ii]
+                if i - left > 5:
+                    # there has been a jump in index, a new time window has started
+                    windows[-1].append(left)
+                    windows.append([i])
+                left = i
+            windows[-1].append(ec_eq_zero_indices[-1])
+            # print ec_eq_zero_indices
+            # print windows
+            for window in windows:
+                time_window = [ES2_data["ec"].index.values[window[0]], ES2_data["ec"].index.values[window[1]]]
+                for k in data:
+                    data[k] = data[k].loc[np.logical_or(data[k].index < time_window[0], data[k].index > time_window[1])]
     else:
         print "No ES2 sensor present. No trimming will be performed."
 
-    # print data["PH_ATLAS"]
-    min_ph = ph_bounds[0]
-    max_ph = ph_bounds[1]
     if "PH_ATLAS" in data:
         print "pH sensor is present. Trimming all data within PH = ["+str(min_ph)+", "+str(max_ph)+ "] time windows\n"
         PH_data = data["PH_ATLAS"]
@@ -251,6 +267,7 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
         for c in data[s].dtypes.keys():
             print "  {:s}, {:s}".format(s, str(c))
     
+    pose = data['pose']
     position = pose[['latitude', 'longitude']]
 
     # Extract the pose timing and the sensor data of interest.
@@ -273,9 +290,6 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
         sensor = sensor[sensor_valid]
 
     ## Add a data overlay for the map
-    data_padding = [0.0000001, 0.0000001]   # degrees lat/lon
-    data_resolution = [0.00001, 0.00001] # degrees lat/lon
-    data_interpolation_radius = 0.00001 # degrees lat/lon
     data_bounds = [(position.min() - data_padding).tolist(),
                    (position.max() + data_padding).tolist()]
 
@@ -322,8 +336,20 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
         print "Data min = {:f}   Data max = {:f}".format(data_min, data_max)
         data_stats["data_min"] = data_min
         data_stats["data_max"] = data_max
-        NORMALIZER = data_max # 800
-        data_zv = (data_zv - data_min) / (NORMALIZER - data_min)
+        if (sensor_id == 0):
+            # pH
+            color_data_min = 5
+            color_data_max = 10
+        elif (sensor_id == 1):
+            # ec
+            color_data_min = 30000
+            color_data_max = 95000
+        elif (sensor_id == 3):
+            # turbidity (DO_ATLAS)
+            color_data_min = 0
+            color_data_max = 1000
+        NORMALIZER = color_data_max # 800
+        data_zv = (data_zv - color_data_min) / (NORMALIZER - color_data_min)
 
 
         print "create color map"
@@ -360,7 +386,7 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds):
         # Set the colormap and norm to correspond to the data for which
         # the colorbar will be used.        
         cmap = matplotlib.cm.jet
-        norm = matplotlib.colors.Normalize(vmin=data_min, vmax=NORMALIZER)
+        norm = matplotlib.colors.Normalize(vmin=color_data_min, vmax=NORMALIZER)
         cb1 = matplotlib.colorbar.ColorbarBase(ax1, cmap=cmap,
                                                norm=norm,
                                                orientation='horizontal')
@@ -389,9 +415,11 @@ if __name__ == '__main__':
     max_ec = int(sys.argv[4])
     min_ph = float(sys.argv[5])
     max_ph = float(sys.argv[6])
+    min_turbidity = 0
+    max_turbidity = 1000
     log_path = "/home/shawn/data/ERM/log_files/"
     if (os.path.isfile(log_path + log_file + '.txt') or os.path.isfile(log_path + log_file+'.txt.incomplete')):
-        generate_overlay(log_path, log_file, sensor_id, [min_ec, max_ec], [min_ph, max_ph])
+        generate_overlay(log_path, log_file, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
     else:
         log_folder = log_file
         log_files = []
@@ -405,7 +433,7 @@ if __name__ == '__main__':
         print log_files
 
         for x in log_files:
-            generate_overlay(log_path, x, sensor_id, [min_ec, max_ec], [min_ph, max_ph])
+            generate_overlay(log_path, x, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
 
 
     # generate_histogram()

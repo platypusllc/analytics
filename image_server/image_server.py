@@ -77,7 +77,8 @@ def render_page(log_file, sensor_id):
     print data
     data["bar_filename"] = "/overlay/"+data["bar_filename"]
     data["overlay_filename"] = "/overlay/"+data["overlay_filename"]
-    return render_template('render.html', log_file = log_file, data_bounds = data["data_bounds"], bar = data["bar_filename"], map_overlay = data["overlay_filename"], data_min = data["data_min"], data_max = data["data_max"])
+    (sensor_name, sensor_channel, sensor_units) = sensor_id_to_name(sensor_id)
+    return render_template('render.html', log_file = log_file, data_bounds = data["data_bounds"], bar = data["bar_filename"], map_overlay = data["overlay_filename"], data_min = data["data_min"], data_max = data["data_max"], sensor_name = sensor_name)
 
 @app.route('/index')
 @app.route('/')
@@ -91,6 +92,7 @@ def render_index():
         else:
             print(file +" is not a file")
 
+    log_files.sort()
     print log_files
 
     return render_template('index.html', log_folder = log_folder, log_files = log_files)

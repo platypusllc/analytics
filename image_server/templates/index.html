@@ -15,7 +15,7 @@
 
 <ul>
 {% for file in log_files %}
-  <li><a href="/logs/{{ file }}/0">{{ file }} EC</a> | <a href="/logs/{{ file }}/1">{{ file }} PH</a> | <a href="/logs/{{ file }}/2">{{ file }} Turbidity</a></li>
+  <li><a href="/logs/{{ file }}/0">{{ file }} PH</a> | <a href="/logs/{{ file }}/1">{{ file }} EC</a> | <a href="/logs/{{ file }}/2">{{ file }} Temperature | <a href="/logs/{{ file }}/3">{{ file }} Turbidity</a></li>
 {% endfor %}
 </ul>
 
