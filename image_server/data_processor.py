@@ -49,14 +49,15 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     data_boundaries = [[37.751816, -122.384368], [37.764696, -122.366599]]
 
     # read the old generation stats file
-    stat_in = {}
+    stats_in = {}
     old_stats = {"settings": {}}
 
     try:
         with open("./stats/"+log_file+'.json', 'r') as infile:
             print "reading previous stats from: " + "./stats/"+log_file+'.json'
             stats_in = json.load(infile)
-            old_stats = stat_in[str(sensor_id)]
+            print stats_in
+            # old_stats = stats_in[str(sensor_id)]
     except:
         print "failed to load from input stats file"
 
@@ -270,6 +271,8 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     pose = data['pose']
     position = pose[['latitude', 'longitude']]
 
+    # print data
+
     # Extract the pose timing and the sensor data of interest.
     pose_times = pose.index.values.astype(np.float64)
 
@@ -344,6 +347,10 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
             # ec
             color_data_min = 30000
             color_data_max = 95000
+        elif (sensor_id == 2):
+            # ec
+            color_data_min = 5
+            color_data_max = 30
         elif (sensor_id == 3):
             # turbidity (DO_ATLAS)
             color_data_min = 0
@@ -399,11 +406,11 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
         pyplot.close('all')
 
         print data_stats
-        stats_out = stat_in
+        stats_out = stats_in
         stats_out[str(sensor_id)] = data_stats
 
         with open("./stats/"+log_file+'.json', 'w') as outfile:
-            json.dump(stats_out, outfile)
+            json.dump(stats_out, outfile, sort_keys=True, indent=4)
 
 if __name__ == '__main__':
     if (len(sys.argv) < 3 or (["-h", "help", "h", "--help"] in sys.argv)):
@@ -419,7 +426,11 @@ if __name__ == '__main__':
     max_turbidity = 1000
     log_path = "/home/shawn/data/ERM/log_files/"
     if (os.path.isfile(log_path + log_file + '.txt') or os.path.isfile(log_path + log_file+'.txt.incomplete')):
-        generate_overlay(log_path, log_file, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+        if sensor_id == -1:
+            for x in range(0, 3):
+                generate_overlay(log_path, log_file, x, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+        else:
+            generate_overlay(log_path, log_file, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
     else:
         log_folder = log_file
         log_files = []
@@ -433,7 +444,11 @@ if __name__ == '__main__':
         print log_files
 
         for x in log_files:
-            generate_overlay(log_path, x, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+            if (sensor_id == -1):
+                for y in range(0, 3):
+                    generate_overlay(log_path, x, y, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+            else:
+                generate_overlay(log_path, x, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
 
 
     # generate_histogram()
