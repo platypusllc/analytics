@@ -427,7 +427,7 @@ if __name__ == '__main__':
     log_path = "/home/shawn/data/ERM/log_files/"
     if (os.path.isfile(log_path + log_file + '.txt') or os.path.isfile(log_path + log_file+'.txt.incomplete')):
         if sensor_id == -1:
-            for x in range(0, 3):
+            for x in range(0, 4):
                 generate_overlay(log_path, log_file, x, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
         else:
             generate_overlay(log_path, log_file, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
@@ -445,7 +445,7 @@ if __name__ == '__main__':
 
         for x in log_files:
             if (sensor_id == -1):
-                for y in range(0, 3):
+                for y in range(0, 4):
                     generate_overlay(log_path, x, y, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
             else:
                 generate_overlay(log_path, x, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
