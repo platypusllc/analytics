@@ -85,6 +85,8 @@ def render_index():
     log_folder = "./stats/"
     log_files = []
     for file in os.listdir(log_folder):
+        if (str(file) == ".gitignore"):
+            continue
         if (os.path.isfile(log_folder+file)):
             print "adding file: " + file
             log_files.append(os.path.splitext(file)[0])
