@@ -1,5 +1,7 @@
 from sklearn.neighbors import RadiusNeighborsRegressor
 import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.cm
 from matplotlib import pyplot
 import numpy as np
@@ -12,6 +14,8 @@ import os
 import glob
 import sys
 import json
+
+log_path = '/home/ubuntu/mount_nas/'
 
 def sensor_id_to_name(id):
     if (id == 0):
@@ -411,6 +415,8 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
 
         with open("./stats/"+log_file+'.json', 'w') as outfile:
             json.dump(stats_out, outfile, sort_keys=True, indent=4)
+    else:
+        print "sensor name: " + sensor_name +" is not in:\n", data
 
 if __name__ == '__main__':
     if (len(sys.argv) < 3 or (["-h", "help", "h", "--help"] in sys.argv)):
@@ -424,11 +430,11 @@ if __name__ == '__main__':
     max_ph = float(sys.argv[6])
     min_turbidity = 0
     max_turbidity = 1000
-    log_path = "/home/shawn/data/ERM/log_files/"
     if (os.path.isfile(log_path + log_file + '.txt') or os.path.isfile(log_path + log_file+'.txt.incomplete')):
         if sensor_id == -1:
             for x in range(0, 4):
                 generate_overlay(log_path, log_file, x, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+                print "\n\n\n\n\n\n\n\n\n"
         else:
             generate_overlay(log_path, log_file, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
     else:
@@ -447,8 +453,9 @@ if __name__ == '__main__':
             if (sensor_id == -1):
                 for y in range(0, 4):
                     generate_overlay(log_path, x, y, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+                    print "\n\n\n\n\n\n\n\n\n"
             else:
                 generate_overlay(log_path, x, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
-
+                print "\n\n\n\n\n\n\n\n\n"
 
     # generate_histogram()

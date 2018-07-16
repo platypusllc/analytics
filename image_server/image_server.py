@@ -1,4 +1,3 @@
-from ipyleaflet import Map, ImageOverlay, Polyline
 import matplotlib
 import matplotlib.cm
 from matplotlib import pyplot
@@ -83,7 +82,7 @@ def render_page(log_file, sensor_id):
 @app.route('/index')
 @app.route('/')
 def render_index():
-    log_folder = "/home/shawn/data/ERM/log_files/"
+    log_folder = "./stats/"
     log_files = []
     for file in os.listdir(log_folder):
         if (os.path.isfile(log_folder+file)):
@@ -101,4 +100,6 @@ def root_dir():  # pragma: no cover
     return os.path.abspath(os.path.dirname(__file__))
 
 if __name__ == '__main__':
-    app.run()
+    app.debug = True
+    app.run(host='0.0.0.0')
+    #app.run()
