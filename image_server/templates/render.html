@@ -14,12 +14,13 @@
 </head>
 <body>
 
-
 <h2><a href="/">Data Home</a></h2>
 <h3>{{ log_file }} - {{ sensor_name }}</h3>
 
-<div id="mapid" style="width: 1280; height: 720px;"></div>
-<img src="{{ bar }}" width="100%" />
+<a href="/logs/{{ log_file }}/0">This run's pH data</a> | <a href="/logs/{{ log_file }}/1">This run's EC data</a> | <a href="/logs/{{ log_file }}/2">This run's Temperature data</a> | <a href="/logs/{{ log_file }}/3">This run's Turbidity data</a><br><br>
+
+<div id="mapid" style="width: 1024px; height: 640px;"></div>
+<img src="{{ bar }}" width="1024px" />
 
 <script>
 	var mymap = L.map('mapid');
