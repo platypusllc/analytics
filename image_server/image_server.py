@@ -34,6 +34,18 @@ def serve_static(filename):
     print "getting static file: ", filename, "from dir: ",os.path.join(".", 'overlay')
     return send_from_directory(os.path.join(".", 'overlay'), filename)
 
+
+@app.route('/csv/<path:filename>')
+def serve_csv(filename):
+    print "getting static file: ", filename, "from dir: ",os.path.join(".", 'csv')
+    return send_from_directory(os.path.join(".", 'csv'), filename)
+
+
+@app.route('/histograms/<path:filename>')
+def serve_histograms(filename):
+    print "getting static file: ", filename, "from dir: ",os.path.join(".", 'histograms')
+    return send_from_directory(os.path.join(".", 'histograms'), filename)
+
 # @app.route('/overlay/<path:path>')
 # def send(path):
 #     path = "/overlay/"+path
@@ -77,7 +89,7 @@ def render_page(log_file, sensor_id):
     data["bar_filename"] = "/overlay/"+data["bar_filename"]
     data["overlay_filename"] = "/overlay/"+data["overlay_filename"]
     (sensor_name, sensor_channel, sensor_units) = sensor_id_to_name(sensor_id)
-    return render_template('render.html', log_file = log_file, data_bounds = data["data_bounds"], bar = data["bar_filename"], map_overlay = data["overlay_filename"], data_min = data["data_min"], data_max = data["data_max"], sensor_name = sensor_name)
+    return render_template('render.html', log_file = log_file, data_bounds = data["data_bounds"], bar = data["bar_filename"], map_overlay = data["overlay_filename"], data_min = data["data_min"], data_max = data["data_max"], sensor_name = sensor_name, data=data)
 
 @app.route('/index')
 @app.route('/')

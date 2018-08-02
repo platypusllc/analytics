@@ -2,6 +2,8 @@ from sklearn.neighbors import RadiusNeighborsRegressor
 import matplotlib
 matplotlib.use('Agg')
 
+import matplotlib.pyplot as plt
+import math
 import matplotlib.cm
 from matplotlib import pyplot
 import numpy as np
@@ -46,11 +48,11 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     max_ph = ph_bounds[1]
     min_turbidity = turbidity_bounds[0]
     max_turbidity = turbidity_bounds[1]
-    data_padding = [0.0000001, 0.0000001]   # degrees lat/lon
+    data_padding = [0., 0.]   # degrees lat/lon
     data_resolution = [0.00001, 0.00001] # degrees lat/lon
     data_interpolation_radius = 0.00001 # degrees lat/lon
 
-    data_boundaries = [[37.751816, -122.384368], [37.764696, -122.366599]]
+    data_boundaries = [[37.756664, -122.381500], [37.760387, -122.377216]]
 
     # read the old generation stats file
     stats_in = {}
@@ -275,7 +277,7 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     pose = data['pose']
     position = pose[['latitude', 'longitude']]
 
-    # print data
+    out_prefix = log_file + "-"+sensor_name+'-'
 
     # Extract the pose timing and the sensor data of interest.
     pose_times = pose.index.values.astype(np.float64)
@@ -291,6 +293,10 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
         # Add the position information back to the sensor data.
         sensor = sensor.join(pandas.DataFrame(sensor_pose_interpolator(sensor_times), sensor.index,
                                               columns=('latitude', 'longitude')))
+
+        csv_output_filename = './csv/'+out_prefix+'csv.csv'
+        data_stats["csv_output_filename"] = out_prefix+'csv.csv'
+        sensor.to_csv(csv_output_filename)
         
         # Remove columns that have NaN values (no pose information).
         sensor_valid = np.all(np.isfinite(sensor), axis=1)
@@ -341,26 +347,40 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
         data_max = data_zv[np.isfinite(data_zv)].max()
         data_min = data_zv[np.isfinite(data_zv)].min()
         print "Data min = {:f}   Data max = {:f}".format(data_min, data_max)
-        data_stats["data_min"] = data_min
-        data_stats["data_max"] = data_max
+        # data_stats["data_min"] = data_min
         if (sensor_id == 0):
             # pH
             color_data_min = 6.5
             color_data_max = 9.5
+            num_bins = 20
         elif (sensor_id == 1):
             # ec
+            num_bins = 20
             color_data_min = 30000
             color_data_max = 95000
         elif (sensor_id == 2):
             # temp
+            num_bins = 20
             color_data_min = 5
             color_data_max = 30
         elif (sensor_id == 3):
             # turbidity (DO_ATLAS)
+            num_bins = 40
             color_data_min = 0
             color_data_max = 1000
+
+        data_stats["data_stddev"] = data[sensor_name][sensor_channel].std()
+        data_stats["data_min"] = data[sensor_name][sensor_channel].min()
+        data_stats["data_max"] = data[sensor_name][sensor_channel].max()
+        data_stats["data_mean"] = data[sensor_name][sensor_channel].mean()
+        histogram_filename = './histograms/'+out_prefix+'histogram.png'
+        data_stats["histogram_filename"] = out_prefix+'histogram.png'
+        plot_hist_sensor(data, sensor_name, sensor_channel, num_bins, color_data_min, color_data_max, histogram_filename)
+
         NORMALIZER = color_data_max # 800
         data_zv = (data_zv - color_data_min) / (NORMALIZER - color_data_min)
+
+
 
 
         print "create color map"
@@ -370,12 +390,10 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
         data_rgb[:,:,3] = 255 * np.isfinite(data_zv)
 
         # Remove any old image files w/ the same name
-        old_png_files = glob.glob('./overlay/[overlay, tint, bar].png')
+        old_png_files = glob.glob('./[overlay,histograms,csv]/'+out_prefix+'-'+sensor_name+'-[overlay,histogram,csv].png')
         for old_png_file in old_png_files:
             print "removing file: " + old_png_file
             os.remove(old_png_file)
-
-        out_prefix = log_file + "-"+sensor_name+'-'
 
         print "creating overlay files"
         png_filename_rgb = './overlay/'+out_prefix+'overlay.png'
@@ -418,6 +436,40 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     else:
         print "sensor name: " + sensor_name +" is not in:\n", data
 
+def plot_hist_sensor(data, sensor, channel, num_bins, min_value, max_value, filename):
+    num_readings = len(data[sensor][channel])
+
+    hist_min = math.floor(min_value)
+    hist_max = math.ceil(max_value)
+    bin_size = (hist_max - hist_min)/float(num_bins)
+
+    std_dev = data[sensor][channel].std()
+    mean = data[sensor][channel].mean()
+
+    bins = np.arange(hist_min, hist_max, bin_size)
+    # print bins
+    # print hist_max, hist_min, bin_size, bins
+
+    # n, bins, patches = plt.hist(data[sensor][channel], bins=xrange(200,1600,100))
+    weights = np.ones_like(data[sensor][channel])/float(num_readings) * 100
+    if (num_bins <= 0):
+        n, bins, patches = plt.hist(data[sensor][channel], weights=weights)
+    else:
+        n, bins, patches = plt.hist(data[sensor][channel], weights=weights, bins=bins)
+
+    # print n, bins, patches
+
+    plt.xlabel(channel)
+    plt.ylabel('Percentage of values in the given range')
+    plt.ylim(0,100)
+    plt.title('Histogram of ' + sensor + " $\mu$="+ "{:.2f}".format(std_dev) +" $\sigma$=" + "{:.2f}".format(mean))
+    plt.savefig(filename)
+    # plt.text(0, .25, "Standard Dev: " + str(es2_stddev))
+    plt.figtext(.16, .75, "Mean: " + str(mean))
+    plt.figtext(.16, .7, "std: " + str(std_dev))
+    plt.grid(True)
+    plt.show()
+
 if __name__ == '__main__':
     if (len(sys.argv) < 3 or (["-h", "help", "h", "--help"] in sys.argv)):
         print "args: python data_processor.py log_file_name (w/o .txt appended) sensor_id min_ec"
@@ -430,13 +482,29 @@ if __name__ == '__main__':
     max_ph = float(sys.argv[6])
     min_turbidity = 0
     max_turbidity = 1000
-    if (os.path.isfile(log_path + log_file + '.txt') or os.path.isfile(log_path + log_file+'.txt.incomplete')):
+    if (os.path.isfile(log_file)):
+        # log_path = sys.argv[1].split("/").join()
+        log_file = sys.argv[1].split("/")[-1]
+        log_file = log_file.split(".")[-2]
+        if ("platypus" not in log_file):
+            log_file = sys.argv[1].split(".")[-2]
+        if ("platypus" not in log_file):
+            print "invalid filename"
+            quit(2)
+        print log_file
         if sensor_id == -1:
             for x in range(0, 4):
+                # try:
                 generate_overlay(log_path, log_file, x, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+                # except:
+                # print "Failed to generate overlay: " + log_path + ", " + log_file + ", " + str(x)
                 print "\n\n\n\n\n\n\n\n\n"
         else:
+            # try:
             generate_overlay(log_path, log_file, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+            # except:
+            # print "Failed to generate overlay: " + log_path + ", " + log_file + ", " + str(sensor_id)
+            print "\n\n\n\n\n\n\n\n\n"
     else:
         log_folder = log_file
         log_files = []
@@ -452,10 +520,16 @@ if __name__ == '__main__':
         for x in log_files:
             if (sensor_id == -1):
                 for y in range(0, 4):
+                    # try:
                     generate_overlay(log_path, x, y, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+                    # except:
+                    # print "Failed to generate overlay: " + log_path + ", " + log_file + ", " + str(y)
                     print "\n\n\n\n\n\n\n\n\n"
             else:
+                # try:
                 generate_overlay(log_path, x, sensor_id, [min_ec, max_ec], [min_ph, max_ph], [min_turbidity, max_turbidity])
+                # except:
+                # print "Failed to generate overlay: " + log_path + ", " + log_file + ", " + str(sensor_id)
                 print "\n\n\n\n\n\n\n\n\n"
 
     # generate_histogram()
