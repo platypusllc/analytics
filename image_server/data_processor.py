@@ -345,14 +345,14 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
         data_stats["data_max"] = data_max
         if (sensor_id == 0):
             # pH
-            color_data_min = 5
-            color_data_max = 10
+            color_data_min = 6.5
+            color_data_max = 9.5
         elif (sensor_id == 1):
             # ec
             color_data_min = 30000
             color_data_max = 95000
         elif (sensor_id == 2):
-            # ec
+            # temp
             color_data_min = 5
             color_data_max = 30
         elif (sensor_id == 3):
