@@ -577,7 +577,7 @@ def read(logfile, filename=None):
     # Depending on the format of the first line, pick an appropriate loader.
     if len(components[1]) == 1:
         # Version 4.2.0 files have a single-character log-level.
-        return read_v4_2_0(logfile)
+        return read_v4_3_0(logfile)
     else:
         try:
             # Version 4.1.0 logs have JSON messages.
