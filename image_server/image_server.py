@@ -89,7 +89,29 @@ def render_page(log_file, sensor_id):
     data["bar_filename"] = "/overlay/"+data["bar_filename"]
     data["overlay_filename"] = "/overlay/"+data["overlay_filename"]
     (sensor_name, sensor_channel, sensor_units) = sensor_id_to_name(sensor_id)
-    return render_template('render.html', log_file = log_file, data_bounds = data["data_bounds"], bar = data["bar_filename"], map_overlay = data["overlay_filename"], data_min = data["data_min"], data_max = data["data_max"], sensor_name = sensor_name, data=data)
+    return render_template('render.html', log_file = log_file, sensor_name = sensor_name, sensor_id=sensor_id, data=data)
+
+@app.route('/reprocess/<string:log_file>/<int:sensor_id>')
+def reprocess(log_file, sensor_id):
+    with open("./stats/"+log_file+'.json', 'r') as readfile:
+        data = json.load(readfile)
+        data = data[str(sensor_id)]
+        print "stats data: ", data
+    import subprocess
+
+    try:
+        base = data["settings"]["log_path"]
+    except:
+        log_path = "~/mount_nas/"
+    name = log_file
+    try:
+        ext = data["settings"]["log_ext"]
+    except:
+        ext = ".txt"
+    path = os.path.join(base, name)
+    subprocess.Popen(["python", "data_processor.py", str(path)+ext, str(sensor_id), "5000", "1000000", "5", "12"])
+
+    return "<a href='/'>HOME</a><br>queued: " + str(["python", "data_processor.py", str(path), "sensor_id", "5000", "1000000", "5", "12"])
 
 @app.route('/index')
 @app.route('/')

@@ -76,12 +76,6 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     data_stats["settings"]["ph_bounds"] = ph_bounds
     data_stats["settings"]["turbidity_bounds"] = turbidity_bounds
 
-    print(str(data_stats["settings"]))
-
-    if (data_stats["settings"] == old_stats["settings"]):
-        print "old processing settings == new processing settings. don't re-run"
-        return
-
     # Import the data from the specified logfile
 
     log_ext = ".txt"
@@ -93,6 +87,13 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
         if (os.path.exists(log_path + log_file + log_ext) == False):
             print "Error. log does not exist: " + log_path  + log_file + log_ext
             return False
+
+    data_stats["settings"]["log_ext"] = log_ext
+    print(str(data_stats["settings"]))
+
+    if (data_stats["settings"] == old_stats["settings"]):
+        print "old processing settings == new processing settings. don't re-run"
+        return
 
     data = platypus.io.logs.load(log_path+log_file+log_ext)
 

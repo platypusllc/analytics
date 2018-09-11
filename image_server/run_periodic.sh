@@ -5,8 +5,15 @@ do
 
     for filename in ~/mount_nas/*.txt; do
         for ((i=0; i<=3; i++)); do
-            python data_processor.py "$filename" "$i" 5000 1000000 5 12
+            python data_processor.py "$filename" "$i" 5000 1000000 6 10.5
         done
     done
-    sleep 60
+
+    for filename in "~/mount_nas/phone 2/*.txt"; do
+        for ((i=0; i<=3; i++)); do
+            python data_processor.py "$filename" "$i" 5000 1000000 6 10.5
+        done
+    done
+
+    sleep 3600
 done
