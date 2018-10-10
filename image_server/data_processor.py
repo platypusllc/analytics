@@ -17,7 +17,7 @@ import glob
 import sys
 import json
 
-log_path = '/home/ubuntu/mount_nas/'
+log_path = '/home/ubuntu/process_ERM/'
 
 def sensor_id_to_name(id):
     if (id == 0):
@@ -53,6 +53,7 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     data_interpolation_radius = 0.00001 # degrees lat/lon
 
     data_boundaries = [[37.756664, -122.381500], [37.760387, -122.377216]]
+#    data_boundaries = []
 
     # read the old generation stats file
     stats_in = {}
@@ -284,6 +285,8 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
     pose_times = pose.index.values.astype(np.float64)
 
     if sensor_name in data:
+        if (sensor_name == "DO_ATLAS"):
+            data[sensor_name]["do"] = data[sensor_name]["do"]/20.0
         sensor = data[sensor_name]
         sensor_times = sensor.index.values.astype(np.float64)
 
@@ -368,7 +371,7 @@ def generate_overlay(log_path, log_file, sensor_id, ec_bounds, ph_bounds, turbid
             # turbidity (DO_ATLAS)
             num_bins = 40
             color_data_min = 0
-            color_data_max = 1000
+            color_data_max = 50
 
         data_stats["data_stddev"] = data[sensor_name][sensor_channel].std()
         data_stats["data_min"] = data[sensor_name][sensor_channel].min()
