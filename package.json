@@ -1,0 +1,39 @@
+{
+  "name": "@platypus/analytics",
+  "version": "0.1.0",
+  "description": "Analytics for Platypus data.",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "lint": "true || tslint -p .",
+    "test": "jest --bail",
+    "prepare": "npm run build",
+    "pretest": "npm run build",
+    "posttest": "npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/platypusllc/analytics.git"
+  },
+  "author": "Pras Velagapudi <pras@senseplatypus.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/platypusllc/analytics/issues"
+  },
+  "homepage": "https://github.com/platypusllc/analytics#readme",
+  "engines": {
+    "node": ">=11"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.11",
+    "@types/node": "^11.13.4",
+    "jest": "^24.7.1",
+    "ts-jest": "^24.0.2",
+    "tslint": "^5.15.0",
+    "typescript": "^3.4.3"
+  },
+  "dependencies": {
+    "utm": "^1.1.1",
+    "utm-latlng": "^1.0.5"
+  }
+}
